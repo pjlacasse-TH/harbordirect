@@ -83,11 +83,12 @@ function ProductCard({
 }: {
   item: InventoryItem
   contracted: ContractedPrices
-  onAdd: (item: InventoryItem, mode: 'each' | 'case') => void
+  onAdd: (item: InventoryItem, mode: 'each' | 'case', qty: number) => void
 }) {
   const sellBoth = item.sell_mode === 'both'
   const defaultMode: 'each' | 'case' = item.sell_mode === 'case' ? 'case' : 'each'
   const [mode, setMode] = useState<'each' | 'case'>(defaultMode)
+  const [qty, setQty] = useState(1)
 
   const status = stockStatus(item)
   const price = resolvePrice(item, contracted, mode)
@@ -173,16 +174,31 @@ function ProductCard({
           )}
         </div>
 
-        {/* Add to cart */}
-        <button
-          disabled={status === 'out' || price === null}
-          onClick={() => onAdd(item, mode)}
-          className="w-full py-2.5 text-sm font-semibold rounded-lg transition-colors
-            bg-[#0d2240] text-white hover:bg-[#1a3a6a]
-            disabled:bg-slate-100 disabled:text-slate-400 disabled:cursor-not-allowed"
-        >
-          {status === 'out' ? 'Out of Stock' : 'Add to Cart'}
-        </button>
+        {/* Qty + Add to cart */}
+        <div className="flex gap-2 items-center">
+          <div className="flex items-center border border-slate-200 rounded-lg overflow-hidden text-sm select-none">
+            <button
+              onClick={() => setQty(q => Math.max(1, q - 1))}
+              disabled={status === 'out' || price === null}
+              className="px-2.5 py-2 text-slate-600 hover:bg-slate-100 transition-colors disabled:opacity-30"
+            >−</button>
+            <span className="px-2.5 font-medium text-slate-800 min-w-[2rem] text-center">{qty}</span>
+            <button
+              onClick={() => setQty(q => q + 1)}
+              disabled={status === 'out' || price === null}
+              className="px-2.5 py-2 text-slate-600 hover:bg-slate-100 transition-colors disabled:opacity-30"
+            >+</button>
+          </div>
+          <button
+            disabled={status === 'out' || price === null}
+            onClick={() => { onAdd(item, mode, qty); setQty(1) }}
+            className="flex-1 py-2.5 text-sm font-semibold rounded-lg transition-colors
+              bg-[#0d2240] text-white hover:bg-[#1a3a6a]
+              disabled:bg-slate-100 disabled:text-slate-400 disabled:cursor-not-allowed"
+          >
+            {status === 'out' ? 'Out of Stock' : 'Add to Cart'}
+          </button>
+        </div>
       </div>
     </div>
   )
@@ -322,7 +338,7 @@ export default function CatalogClient({ email, items, contractedPrices }: Props)
     )
   }, [items, search])
 
-  function addToCart(item: InventoryItem, mode: 'each' | 'case') {
+  function addToCart(item: InventoryItem, mode: 'each' | 'case', qty: number = 1) {
     const price = resolvePrice(item, contractedPrices, mode)
     if (price === null) return
     const key = `${item.id}_${mode}`
@@ -330,7 +346,7 @@ export default function CatalogClient({ email, items, contractedPrices }: Props)
       ...prev,
       [key]: {
         item,
-        qty: (prev[key]?.qty ?? 0) + 1,
+        qty: (prev[key]?.qty ?? 0) + qty,
         mode,
         unitPrice: price,
       }
