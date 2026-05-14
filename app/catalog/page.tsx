@@ -10,7 +10,7 @@ export default async function CatalogPage() {
   // Fetch portal-available inventory
   const { data: items, error: itemsError } = await supabase
     .from('inventory')
-    .select('id, item_name, sku, description, sell_price, sell_price_case, sell_mode, qty_on_hand, low_stock_alert, image_url')
+    .select('id, item_name, sku, description, sell_price, sell_price_case, sell_mode, sell_uom, qty_on_hand, low_stock_alert, image_url, variant_group, variant_label')
     .eq('available_on_portal', true)
     .order('item_name')
 

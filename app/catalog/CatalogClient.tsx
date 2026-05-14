@@ -14,9 +14,12 @@ interface InventoryItem {
   sell_price: number | null
   sell_price_case: number | null
   sell_mode: string | null
+  sell_uom: string | null
   qty_on_hand: number | null
   low_stock_alert: number | null
   image_url: string | null
+  variant_group: string | null
+  variant_label: string | null
 }
 
 interface ContractedPrices {
@@ -118,7 +121,7 @@ function ProductCard({
         {/* Unit badge top-left */}
         {item.sell_mode && (
           <span className="absolute top-2 left-2 text-xs font-semibold text-slate-600 bg-white/90 border border-slate-200 px-2 py-0.5 rounded-full capitalize">
-            {item.sell_mode === 'both' ? mode : item.sell_mode}
+            {item.sell_mode === 'both' ? (mode === 'each' ? (item.sell_uom || 'each') : 'case') : item.sell_mode === 'each' ? (item.sell_uom || 'each') : 'case'}
           </span>
         )}
       </div>
@@ -146,9 +149,9 @@ function ProductCard({
           <div className="flex rounded-lg border border-slate-200 overflow-hidden text-xs font-medium self-start">
             <button
               onClick={() => setMode('each')}
-              className={`px-3 py-1.5 transition-colors ${mode === 'each' ? 'bg-[#0d2240] text-white' : 'text-slate-600 hover:bg-slate-50'}`}
+              className={`px-3 py-1.5 transition-colors capitalize ${mode === 'each' ? 'bg-[#0d2240] text-white' : 'text-slate-600 hover:bg-slate-50'}`}
             >
-              Each
+              {item.sell_uom || 'Each'}
             </button>
             <button
               onClick={() => setMode('case')}
@@ -319,6 +322,165 @@ function CartSidebar({
   )
 }
 
+// Groups items by variant_group. Returns standalone items and variant groups separately.
+function groupItems(items: InventoryItem[]): Array<InventoryItem | InventoryItem[]> {
+  const groups = new Map<string, InventoryItem[]>()
+  const standalone: Array<InventoryItem | InventoryItem[]> = []
+
+  for (const item of items) {
+    if (item.variant_group) {
+      const g = groups.get(item.variant_group) ?? []
+      g.push(item)
+      groups.set(item.variant_group, g)
+    } else {
+      standalone.push(item)
+    }
+  }
+
+  // Interleave groups in the order the first variant appeared
+  const result: Array<InventoryItem | InventoryItem[]> = []
+  const seen = new Set<string>()
+  for (const item of items) {
+    if (item.variant_group) {
+      if (!seen.has(item.variant_group)) {
+        seen.add(item.variant_group)
+        result.push(groups.get(item.variant_group)!)
+      }
+    } else {
+      result.push(item)
+    }
+  }
+  return result
+}
+
+function VariantCard({
+  variants,
+  contracted,
+  onAdd,
+}: {
+  variants: InventoryItem[]
+  contracted: ContractedPrices
+  onAdd: (item: InventoryItem, mode: 'each' | 'case', qty: number) => void
+}) {
+  const [selectedIdx, setSelectedIdx] = useState(0)
+  const [qty, setQty] = useState(1)
+
+  const item = variants[selectedIdx]
+  const sellBoth = item.sell_mode === 'both'
+  const defaultMode: 'each' | 'case' = item.sell_mode === 'case' ? 'case' : 'each'
+  const [mode, setMode] = useState<'each' | 'case'>(defaultMode)
+
+  // Reset mode when variant changes
+  const handleVariantSelect = (idx: number) => {
+    setSelectedIdx(idx)
+    const newItem = variants[idx]
+    setMode(newItem.sell_mode === 'case' ? 'case' : 'each')
+    setQty(1)
+  }
+
+  const status = stockStatus(item)
+  const price = resolvePrice(item, contracted, mode)
+  const isContracted = !!contracted[item.id]
+
+  // Use first variant's image as the group image
+  const groupImage = variants.find(v => v.image_url)?.image_url ?? null
+  const groupName = variants[0].item_name.replace(/\s*(x-?small|small|medium|large|x-?large|xxl|xs|sm|md|lg|xl)\s*/i, '').trim()
+
+  return (
+    <div className="bg-white rounded-xl border border-slate-200 shadow-sm flex flex-col overflow-hidden hover:shadow-md transition-shadow">
+      {/* Image */}
+      <div className="relative bg-slate-100 h-44 flex items-center justify-center">
+        {groupImage ? (
+          <Image src={groupImage} alt={groupName} fill className="object-contain p-3"
+            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw" />
+        ) : (
+          <div className="flex flex-col items-center gap-1 text-slate-300">
+            <svg className="w-12 h-12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+              <rect x="3" y="3" width="18" height="18" rx="2" />
+              <path d="m9 9 6 6M15 9l-6 6" />
+            </svg>
+            <span className="text-xs">No image</span>
+          </div>
+        )}
+        <span className="absolute top-2 left-2 text-xs font-semibold text-slate-600 bg-white/90 border border-slate-200 px-2 py-0.5 rounded-full capitalize">
+          {sellBoth ? (mode === 'each' ? (item.sell_uom || 'each') : 'case') : item.sell_mode === 'each' ? (item.sell_uom || 'each') : 'case'}
+        </span>
+      </div>
+
+      <div className="flex flex-col flex-1 p-4 gap-3">
+        <div className="flex flex-col gap-1.5">
+          <StockBadge status={status} />
+          <h3 className="font-semibold text-[#0d2240] text-sm leading-snug">{groupName}</h3>
+          <p className="text-xs text-slate-400 font-mono">SKU: {item.sku}</p>
+        </div>
+
+        {item.description && (
+          <p className="text-xs text-slate-500 line-clamp-2 leading-relaxed">{item.description}</p>
+        )}
+
+        {/* Variant selector buttons */}
+        <div className="flex flex-wrap gap-1.5">
+          {variants.map((v, i) => (
+            <button
+              key={v.id}
+              onClick={() => handleVariantSelect(i)}
+              className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition-colors ${
+                i === selectedIdx
+                  ? 'bg-[#0d2240] text-white border-[#0d2240]'
+                  : 'bg-white text-slate-600 border-slate-200 hover:border-[#0d2240] hover:text-[#0d2240]'
+              }`}
+            >
+              {v.variant_label || v.sku}
+            </button>
+          ))}
+        </div>
+
+        {/* Mode toggle */}
+        {sellBoth && (
+          <div className="flex rounded-lg border border-slate-200 overflow-hidden text-xs font-medium self-start">
+            <button onClick={() => setMode('each')}
+              className={`px-3 py-1.5 transition-colors capitalize ${mode === 'each' ? 'bg-[#0d2240] text-white' : 'text-slate-600 hover:bg-slate-50'}`}>
+              {item.sell_uom || 'Each'}
+            </button>
+            <button onClick={() => setMode('case')}
+              className={`px-3 py-1.5 transition-colors ${mode === 'case' ? 'bg-[#0d2240] text-white' : 'text-slate-600 hover:bg-slate-50'}`}>
+              Case
+            </button>
+          </div>
+        )}
+
+        {/* Price */}
+        <div className="mt-auto">
+          <div className="flex items-baseline gap-2">
+            <span className="text-xl font-bold text-[#0d2240]">{fmt(price)}</span>
+            {isContracted && price !== null && (
+              <span className="text-xs text-blue-600 font-medium">Your price</span>
+            )}
+          </div>
+        </div>
+
+        {/* Qty + Add */}
+        <div className="flex gap-2 items-center">
+          <div className="flex items-center border border-slate-200 rounded-lg overflow-hidden text-sm select-none">
+            <button onClick={() => setQty(q => Math.max(1, q - 1))} disabled={status === 'out' || price === null}
+              className="px-2.5 py-2 text-slate-600 hover:bg-slate-100 transition-colors disabled:opacity-30">−</button>
+            <span className="px-2.5 font-medium text-slate-800 min-w-[2rem] text-center">{qty}</span>
+            <button onClick={() => setQty(q => q + 1)} disabled={status === 'out' || price === null}
+              className="px-2.5 py-2 text-slate-600 hover:bg-slate-100 transition-colors disabled:opacity-30">+</button>
+          </div>
+          <button
+            disabled={status === 'out' || price === null}
+            onClick={() => { onAdd(item, mode, qty); setQty(1) }}
+            className="flex-1 py-2.5 text-sm font-semibold rounded-lg transition-colors bg-[#0d2240] text-white hover:bg-[#1a3a6a] disabled:bg-slate-100 disabled:text-slate-400 disabled:cursor-not-allowed"
+          >
+            {status === 'out' ? 'Out of Stock' : 'Add to Cart'}
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export default function CatalogClient({ email, items, contractedPrices }: Props) {
   const router = useRouter()
   const [search, setSearch] = useState('')
@@ -422,14 +584,23 @@ export default function CatalogClient({ email, items, contractedPrices }: Props)
               {search ? ` matching "${search}"` : ''}
             </p>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {filtered.map(item => (
-                <ProductCard
-                  key={item.id}
-                  item={item}
-                  contracted={contractedPrices}
-                  onAdd={addToCart}
-                />
-              ))}
+              {groupItems(filtered).map((entry, i) =>
+                Array.isArray(entry) ? (
+                  <VariantCard
+                    key={entry[0].variant_group ?? i}
+                    variants={entry}
+                    contracted={contractedPrices}
+                    onAdd={addToCart}
+                  />
+                ) : (
+                  <ProductCard
+                    key={entry.id}
+                    item={entry}
+                    contracted={contractedPrices}
+                    onAdd={addToCart}
+                  />
+                )
+              )}
             </div>
           </>
         )}
