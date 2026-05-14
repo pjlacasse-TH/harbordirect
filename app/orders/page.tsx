@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 
@@ -27,8 +28,9 @@ export default async function OrdersPage() {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')
 
+  const admin = createAdminClient()
   const emailLower = (user.email ?? '').toLowerCase()
-  const { data: customer } = await supabase
+  const { data: customer } = await admin
     .from('customers')
     .select('id')
     .or(`customer_email.ilike.${emailLower},portal_email.ilike.${emailLower}`)
@@ -56,7 +58,7 @@ export default async function OrdersPage() {
 
   let orders: Order[] = []
   if (customer?.id) {
-    const { data } = await supabase
+    const { data } = await admin
       .from('portal_orders')
       .select(`
         id, order_number, status, subtotal, notes, placed_at,
