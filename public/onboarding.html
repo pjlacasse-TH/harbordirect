@@ -1,0 +1,555 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>New Customer Application</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=Sora:wght@700;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    :root {
+      --accent: #1e5aaa;
+      --accent2: #103469;
+      --border: #d1dae8;
+      --bg: #f0f4fa;
+      --card: #ffffff;
+      --text: #0f1923;
+      --muted: #64748b;
+      --success: #16a34a;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: linear-gradient(135deg, var(--bg), #e8eefc); color: var(--text); font-family: 'DM Sans', system-ui, sans-serif; min-height: 100vh; padding: 32px 16px 64px; }
+    .wrap { max-width: 700px; margin: 0 auto; }
+    .header { text-align: center; margin-bottom: 32px; }
+    .logo { display: block; margin: 0 auto 20px; max-width: 220px; max-height: 80px; width: auto; height: auto; object-fit: contain; }
+    .logo-initials { width: 80px; height: 80px; border-radius: 50%; background: var(--accent); color: #fff; font-family: 'Sora', sans-serif; font-size: 24px; font-weight: 800; display: none; align-items: center; justify-content: center; margin: 0 auto 20px; }
+    .header .company-label { font-family: 'Sora', sans-serif; font-weight: 700; color: var(--accent); font-size: 1.05rem; margin: 0 0 6px; }
+    .header h1 { font-family: 'Sora', sans-serif; font-weight: 800; font-size: 1.75rem; color: var(--accent2); margin: 0 0 8px; letter-spacing: -.02em; }
+    .header p { color: var(--muted); font-size: 15px; margin: 0; }
+    .card { background: var(--card); border: 1.5px solid var(--border); border-radius: 20px; padding: 28px 32px; box-shadow: 0 4px 24px rgba(15,23,42,.09); margin-bottom: 20px; }
+    .section-title { font-family: 'Sora', sans-serif; font-weight: 700; font-size: 1rem; color: var(--accent2); margin: 0 0 16px; padding-bottom: 10px; border-bottom: 1.5px solid var(--border); letter-spacing: -.01em; }
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    .grid.three { grid-template-columns: 1fr 1fr 1fr; }
+    .field { margin-bottom: 14px; }
+    .field:last-child { margin-bottom: 0; }
+    label { display: block; font-size: 11px; font-weight: 600; margin-bottom: 5px; letter-spacing: .05em; text-transform: uppercase; color: var(--muted); }
+    label .req { color: #dc2626; }
+    label .hint { font-weight: 400; text-transform: none; letter-spacing: 0; font-size: 10px; }
+    input, textarea, select { width: 100%; padding: 10px 13px; border: 1.5px solid var(--border); border-radius: 10px; font-family: 'DM Sans', sans-serif; font-size: 14px; color: var(--text); background: transparent; transition: border-color .15s, box-shadow .15s; }
+    input:focus, textarea:focus, select:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(30,90,170,.12); }
+    textarea { min-height: 72px; resize: vertical; }
+    select { background: #fff; }
+    .check-label { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; cursor: pointer; user-select: none; }
+    .check-label input[type="checkbox"] { width: 18px; height: 18px; flex-shrink: 0; margin: 0; accent-color: var(--accent); cursor: pointer; }
+    .check-label span { font-size: 14px; color: var(--text); }
+    .upload-area { border: 2px dashed var(--border); border-radius: 10px; padding: 24px 16px; text-align: center; cursor: pointer; transition: border-color .15s, background .15s; position: relative; }
+    .upload-area:hover, .upload-area.drag-over { border-color: var(--accent); background: rgba(30,90,170,.04); }
+    .upload-area input[type="file"] { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
+    .upload-icon { font-size: 32px; display: block; margin-bottom: 8px; }
+    .upload-label { font-size: 14px; color: var(--muted); line-height: 1.5; }
+    .upload-label strong { color: var(--accent); }
+    .upload-selected { margin-top: 10px; font-size: 13px; color: var(--success); font-weight: 600; }
+    .submit-wrap { text-align: center; margin-top: 28px; }
+    button[type="submit"] { background: var(--accent); color: #fff; border: 0; border-radius: 10px; padding: 14px 48px; font-family: 'DM Sans', sans-serif; font-size: 16px; font-weight: 700; cursor: pointer; letter-spacing: .01em; transition: background .15s, transform .1s; }
+    button[type="submit"]:hover { background: var(--accent2); }
+    button[type="submit"]:active { transform: translateY(1px); }
+    button[type="submit"]:disabled { opacity: .6; cursor: not-allowed; }
+    .error-msg { color: #dc2626; font-weight: 600; margin-top: 14px; min-height: 20px; font-size: 14px; }
+    .success-screen { text-align: center; padding: 48px 24px; }
+    .success-screen h2 { font-family: 'Sora', sans-serif; font-weight: 800; color: var(--success); font-size: 1.8rem; margin-bottom: 12px; }
+    .success-screen p { color: var(--muted); font-size: 15px; max-width: 440px; margin: 0 auto; }
+    .check-icon { font-size: 56px; display: block; margin-bottom: 16px; }
+    .privacy-note { text-align: center; color: var(--muted); font-size: 12px; margin-top: 16px; }
+    .loading-screen { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 70vh; color: var(--muted); }
+    .spinner { width: 40px; height: 40px; border: 3px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin .8s linear infinite; margin-bottom: 16px; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    @media(max-width: 600px) { .grid, .grid.three { grid-template-columns: 1fr; } .card { padding: 20px; } }
+  </style>
+</head>
+<body>
+
+<!-- Loading -->
+<div id="loadingScreen" class="loading-screen">
+  <div class="spinner"></div>
+  <p>Loading your application form...</p>
+</div>
+
+<!-- Error (company not found / no ?co param) -->
+<div id="errorScreen" style="display:none">
+  <div class="wrap">
+    <div class="card" style="text-align:center;padding:48px 24px;margin-top:48px">
+      <div style="font-size:48px;margin-bottom:16px">⚠️</div>
+      <h2 style="font-family:'Sora',sans-serif;color:var(--accent2);margin:0 0 12px">Form Not Available</h2>
+      <p id="errorDetail" style="color:var(--muted);font-size:15px;max-width:400px;margin:0 auto">Please use the link provided to you to access this form.</p>
+    </div>
+  </div>
+</div>
+
+<!-- Main form (shown after company loads) -->
+<div class="wrap" id="mainWrap" style="display:none">
+
+  <div class="header">
+    <img id="companyLogo" class="logo" src="" alt="" style="display:none">
+    <div id="companyInitials" class="logo-initials"></div>
+    <div id="companyLabel" class="company-label"></div>
+    <h1>New Customer Application</h1>
+    <p>Fill out this form to get started as a customer. We'll review your information and be in touch shortly.</p>
+  </div>
+
+  <!-- Success -->
+  <div class="card success-screen" id="successScreen" style="display:none">
+    <span class="check-icon">✅</span>
+    <h2>Application Submitted!</h2>
+    <p>Thank you for your interest. We've received your application and will reach out within 1–2 business days.</p>
+  </div>
+
+  <form id="onboardingForm" novalidate>
+
+    <!-- ── Business Information ── -->
+    <div class="card">
+      <div class="section-title">Business Information</div>
+      <div class="field">
+        <label>Business / Company Name <span class="req">*</span></label>
+        <input id="bizName" placeholder="e.g. Twin Harbors Home Health, LLC" required>
+      </div>
+      <div class="grid">
+        <div class="field">
+          <label>Industry / Business Type</label>
+          <select id="bizIndustry">
+            <option value="">Select one...</option>
+            <option>Home Health Agency</option>
+            <option>Clinic / Medical Office</option>
+            <option>Hospital / Health System</option>
+            <option>Pharmacy</option>
+            <option>Physical Therapy</option>
+            <option>Nursing Home / Long-Term Care</option>
+            <option>Hospice</option>
+            <option>DME Supplier</option>
+            <option>Other Healthcare</option>
+            <option>Other</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Website</label>
+          <input id="bizWebsite" type="url" placeholder="https://">
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Main Contact ── -->
+    <div class="card">
+      <div class="section-title">Main Contact</div>
+      <div class="grid">
+        <div class="field"><label>First Name <span class="req">*</span></label><input id="mainFirst" required></div>
+        <div class="field"><label>Last Name <span class="req">*</span></label><input id="mainLast" required></div>
+      </div>
+      <div class="grid">
+        <div class="field"><label>Email Address <span class="req">*</span></label><input id="mainEmail" type="email" required></div>
+        <div class="field"><label>Phone Number <span class="req">*</span></label><input id="mainPhone" type="tel" required></div>
+      </div>
+      <div class="field">
+        <label>Title / Role</label>
+        <input id="mainTitle" placeholder="e.g. Owner, Office Manager, Director of Nursing">
+      </div>
+    </div>
+
+    <!-- ── Billing Contact ── -->
+    <div class="card">
+      <div class="section-title">Billing Contact</div>
+      <label class="check-label" for="billingSameAsMain">
+        <input type="checkbox" id="billingSameAsMain" checked onchange="toggleBillingContact(this.checked)">
+        <span>Same as Main Contact</span>
+      </label>
+      <div id="billingContactFields" style="display:none">
+        <div class="grid">
+          <div class="field"><label>First Name</label><input id="billingFirst"></div>
+          <div class="field"><label>Last Name</label><input id="billingLast"></div>
+        </div>
+        <div class="grid">
+          <div class="field"><label>Email Address</label><input id="billingEmail" type="email"></div>
+          <div class="field"><label>Phone Number</label><input id="billingPhone" type="tel"></div>
+        </div>
+        <div class="field">
+          <label>Title / Role</label>
+          <input id="billingTitle" placeholder="e.g. Accounts Payable, Controller">
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Billing Address ── -->
+    <div class="card">
+      <div class="section-title">Billing Address</div>
+      <div class="field">
+        <label>Street Address <span class="req">*</span></label>
+        <input id="billStreet" placeholder="123 Main Street, Suite 100" required>
+      </div>
+      <div class="grid">
+        <div class="field"><label>City <span class="req">*</span></label><input id="billCity" required></div>
+        <div class="field">
+          <label>State <span class="req">*</span></label>
+          <select id="billState" required>
+            <option value="">Select...</option>
+            <option>AL</option><option>AK</option><option>AZ</option><option>AR</option>
+            <option>CA</option><option>CO</option><option>CT</option><option>DE</option>
+            <option>DC</option><option>FL</option><option>GA</option><option>HI</option>
+            <option>ID</option><option>IL</option><option>IN</option><option>IA</option>
+            <option>KS</option><option>KY</option><option>LA</option><option>ME</option>
+            <option>MD</option><option>MA</option><option>MI</option><option>MN</option>
+            <option>MS</option><option>MO</option><option>MT</option><option>NE</option>
+            <option>NV</option><option>NH</option><option>NJ</option><option>NM</option>
+            <option>NY</option><option>NC</option><option>ND</option><option>OH</option>
+            <option>OK</option><option>OR</option><option>PA</option><option>RI</option>
+            <option>SC</option><option>SD</option><option>TN</option><option>TX</option>
+            <option>UT</option><option>VT</option><option>VA</option><option>WA</option>
+            <option>WV</option><option>WI</option><option>WY</option>
+          </select>
+        </div>
+      </div>
+      <div class="field" style="max-width:180px">
+        <label>ZIP Code <span class="req">*</span></label>
+        <input id="billZip" placeholder="12345" required maxlength="10">
+      </div>
+    </div>
+
+    <!-- ── Shipping Address ── -->
+    <div class="card">
+      <div class="section-title">Shipping / Delivery Address</div>
+      <label class="check-label" for="shippingSameAsBilling">
+        <input type="checkbox" id="shippingSameAsBilling" checked onchange="toggleShippingAddress(this.checked)">
+        <span>Same as Billing Address</span>
+      </label>
+      <div id="shippingAddressFields" style="display:none">
+        <div class="field">
+          <label>Street Address</label>
+          <input id="shipStreet" placeholder="123 Main Street">
+        </div>
+        <div class="grid">
+          <div class="field"><label>City</label><input id="shipCity"></div>
+          <div class="field">
+            <label>State</label>
+            <select id="shipState">
+              <option value="">Select...</option>
+              <option>AL</option><option>AK</option><option>AZ</option><option>AR</option>
+              <option>CA</option><option>CO</option><option>CT</option><option>DE</option>
+              <option>DC</option><option>FL</option><option>GA</option><option>HI</option>
+              <option>ID</option><option>IL</option><option>IN</option><option>IA</option>
+              <option>KS</option><option>KY</option><option>LA</option><option>ME</option>
+              <option>MD</option><option>MA</option><option>MI</option><option>MN</option>
+              <option>MS</option><option>MO</option><option>MT</option><option>NE</option>
+              <option>NV</option><option>NH</option><option>NJ</option><option>NM</option>
+              <option>NY</option><option>NC</option><option>ND</option><option>OH</option>
+              <option>OK</option><option>OR</option><option>PA</option><option>RI</option>
+              <option>SC</option><option>SD</option><option>TN</option><option>TX</option>
+              <option>UT</option><option>VT</option><option>VA</option><option>WA</option>
+              <option>WV</option><option>WI</option><option>WY</option>
+            </select>
+          </div>
+        </div>
+        <div class="field" style="max-width:180px">
+          <label>ZIP Code</label>
+          <input id="shipZip" placeholder="12345" maxlength="10">
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Account Preferences ── -->
+    <div class="card">
+      <div class="section-title">Account Preferences</div>
+      <div class="field">
+        <label>Preferred Payment Method</label>
+        <select id="preferredPayment">
+          <option value="">Select one...</option>
+          <option>Check</option>
+          <option>ACH / EFT</option>
+          <option>Credit Card</option>
+          <option>Cash</option>
+          <option>Net 30 Terms</option>
+          <option>Net 60 Terms</option>
+          <option>COD</option>
+          <option>Other</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>W9 Form <span class="hint">(optional — PDF, JPG, or PNG · Max 10 MB)</span></label>
+        <div class="upload-area" id="uploadArea"
+             ondragover="onDragOver(event)" ondragleave="onDragLeave(event)" ondrop="onDrop(event)">
+          <input type="file" id="w9File" accept=".pdf,.jpg,.jpeg,.png" onchange="onFileSelect(event)">
+          <span class="upload-icon">📄</span>
+          <div class="upload-label">
+            <strong>Choose file</strong> or drag &amp; drop it here
+          </div>
+          <div class="upload-selected" id="uploadSelected" style="display:none"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Additional Info ── -->
+    <div class="card">
+      <div class="section-title">A Little More About Your Business</div>
+      <div class="field">
+        <label>How did you hear about us?</label>
+        <select id="hearAbout">
+          <option value="">Select one...</option>
+          <option>Referral from another business</option>
+          <option>Google / Internet Search</option>
+          <option>Social Media</option>
+          <option>Trade Show / Conference</option>
+          <option>Cold Call / Salesperson</option>
+          <option>Existing Customer</option>
+          <option>Other</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Products or services you're interested in</label>
+        <textarea id="interests" placeholder="e.g. wound care supplies, durable medical equipment, incontinence products..."></textarea>
+      </div>
+      <div class="field">
+        <label>Any questions or additional information</label>
+        <textarea id="notes" placeholder="Anything else you'd like us to know..."></textarea>
+      </div>
+    </div>
+
+    <div class="submit-wrap">
+      <button type="submit" id="submitBtn">Submit Application</button>
+      <div class="error-msg" id="errorMsg"></div>
+    </div>
+
+    <p class="privacy-note">Your information is used only to set up your account. We will never sell or share your data.</p>
+  </form>
+</div>
+
+<script>
+  // ── Config ─────────────────────────────────────────────────
+  const SUPABASE_URL      = 'https://lyqkptxjdywzkiynhrdk.supabase.co';
+  const SUPABASE_ANON_KEY = 'sb_publishable_Vs_tLIYpOGlxpExdnp70zA_EgVZ7Rn_';
+  const db = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+  const params          = new URLSearchParams(window.location.search);
+  const coParam         = params.get('co');   // UUID or slug
+  let   resolvedCompanyId = null;             // always the actual UUID after init()
+  let   w9FileObj       = null;
+
+  // ── Init: load company branding ────────────────────────────
+  async function init() {
+    if (!coParam) {
+      showError('No company specified. Please use the link provided to you.');
+      return;
+    }
+
+    // Accept either a raw UUID or a friendly slug (e.g. "twin-harbors")
+    const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(coParam);
+    let q = db.from('companies').select('id, company_name, company_logo_url, company_logo_initials');
+    q = isUUID ? q.eq('id', coParam) : q.eq('onboarding_slug', coParam);
+    const { data: co, error } = await q.single();
+
+    if (error || !co) {
+      showError('Company not found. Please check your link and try again.');
+      return;
+    }
+
+    resolvedCompanyId = co.id;
+    document.title = 'New Customer Application — ' + co.company_name;
+    document.getElementById('companyLabel').textContent = co.company_name;
+
+    if (co.company_logo_url) {
+      const img = document.getElementById('companyLogo');
+      img.src = co.company_logo_url;
+      img.alt = co.company_name;
+      img.style.display = 'block';
+    } else {
+      const ini = document.getElementById('companyInitials');
+      ini.textContent = co.company_logo_initials || co.company_name.slice(0, 2).toUpperCase();
+      ini.style.display = 'flex';
+    }
+
+    document.getElementById('loadingScreen').style.display = 'none';
+    document.getElementById('mainWrap').style.display      = 'block';
+  }
+
+  function showError(msg) {
+    document.getElementById('loadingScreen').style.display = 'none';
+    document.getElementById('errorDetail').textContent     = msg;
+    document.getElementById('errorScreen').style.display  = 'block';
+  }
+
+  // ── Section toggles ────────────────────────────────────────
+  function toggleBillingContact(sameAsMain) {
+    document.getElementById('billingContactFields').style.display = sameAsMain ? 'none' : '';
+  }
+
+  function toggleShippingAddress(sameAsBilling) {
+    document.getElementById('shippingAddressFields').style.display = sameAsBilling ? 'none' : '';
+  }
+
+  // ── W9 file handling ───────────────────────────────────────
+  function onFileSelect(e) { setW9File(e.target.files[0]); }
+
+  function onDragOver(e) {
+    e.preventDefault();
+    document.getElementById('uploadArea').classList.add('drag-over');
+  }
+
+  function onDragLeave(e) {
+    document.getElementById('uploadArea').classList.remove('drag-over');
+  }
+
+  function onDrop(e) {
+    e.preventDefault();
+    document.getElementById('uploadArea').classList.remove('drag-over');
+    setW9File(e.dataTransfer.files[0]);
+  }
+
+  function setW9File(file) {
+    if (!file) return;
+    if (file.size > 10 * 1024 * 1024) { alert('File is too large. Maximum size is 10 MB.'); return; }
+    w9FileObj = file;
+    const sel = document.getElementById('uploadSelected');
+    sel.textContent = '✓ ' + file.name + ' (' + (file.size / 1024).toFixed(0) + ' KB)';
+    sel.style.display = 'block';
+  }
+
+  // ── Form submission ─────────────────────────────────────────
+  document.getElementById('onboardingForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    const err = document.getElementById('errorMsg');
+    const btn = document.getElementById('submitBtn');
+    err.textContent = '';
+
+    // Collect required values
+    const bizName    = document.getElementById('bizName').value.trim();
+    const mainFirst  = document.getElementById('mainFirst').value.trim();
+    const mainLast   = document.getElementById('mainLast').value.trim();
+    const mainEmail  = document.getElementById('mainEmail').value.trim();
+    const mainPhone  = document.getElementById('mainPhone').value.trim();
+    const billStreet = document.getElementById('billStreet').value.trim();
+    const billCity   = document.getElementById('billCity').value.trim();
+    const billState  = document.getElementById('billState').value;
+    const billZip    = document.getElementById('billZip').value.trim();
+
+    // Validate
+    if (!bizName)    { err.textContent = 'Business name is required.'; return; }
+    if (!mainFirst)  { err.textContent = 'Main contact first name is required.'; return; }
+    if (!mainLast)   { err.textContent = 'Main contact last name is required.'; return; }
+    if (!mainEmail)  { err.textContent = 'Main contact email is required.'; return; }
+    if (!mainPhone)  { err.textContent = 'Main contact phone is required.'; return; }
+    if (!billStreet) { err.textContent = 'Billing street address is required.'; return; }
+    if (!billCity)   { err.textContent = 'Billing city is required.'; return; }
+    if (!billState)  { err.textContent = 'Billing state is required.'; return; }
+    if (!billZip)    { err.textContent = 'Billing ZIP code is required.'; return; }
+
+    btn.disabled    = true;
+    btn.textContent = 'Submitting...';
+
+    try {
+      // Build address strings
+      const billingAddress = billStreet + ', ' + billCity + ', ' + billState + ' ' + billZip;
+
+      const sameShipping = document.getElementById('shippingSameAsBilling').checked;
+      let shippingAddress = null;
+      if (!sameShipping) {
+        const ss = document.getElementById('shipStreet').value.trim();
+        const sc = document.getElementById('shipCity').value.trim();
+        const st = document.getElementById('shipState').value;
+        const sz = document.getElementById('shipZip').value.trim();
+        const parts = [ss, sc, st && sz ? st + ' ' + sz : (st || sz)].filter(Boolean);
+        if (parts.length) shippingAddress = parts.join(', ');
+      }
+
+      // Billing contact
+      const sameContact          = document.getElementById('billingSameAsMain').checked;
+      const billingContactFirst  = sameContact ? '' : document.getElementById('billingFirst').value.trim();
+      const billingContactLast   = sameContact ? '' : document.getElementById('billingLast').value.trim();
+      const billingContactName   = sameContact ? null : ([billingContactFirst, billingContactLast].filter(Boolean).join(' ') || null);
+      const billingContactEmail  = sameContact ? null : (document.getElementById('billingEmail').value.trim() || null);
+      const billingContactPhone  = sameContact ? null : (document.getElementById('billingPhone').value.trim() || null);
+      const billingContactTitle  = sameContact ? null : (document.getElementById('billingTitle').value.trim() || null);
+
+      // Upload W9 if provided (stores storage path, not a public URL)
+      let w9Url = null, w9FileName = null, w9UploadedAt = null;
+      if (w9FileObj) {
+        const safe = w9FileObj.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+        const path = resolvedCompanyId + '/' + Date.now() + '-' + safe;
+        const { error: upErr } = await db.storage.from('onboarding-docs').upload(path, w9FileObj, { contentType: w9FileObj.type });
+        if (upErr) throw new Error('W9 upload failed: ' + upErr.message);
+        w9Url       = path;
+        w9FileName  = w9FileObj.name;
+        w9UploadedAt = new Date().toISOString();
+      }
+
+      // Build notes string from extra fields
+      const noteParts = [];
+      const hearAbout  = document.getElementById('hearAbout').value;
+      const interests  = document.getElementById('interests').value.trim();
+      const extraNotes = document.getElementById('notes').value.trim();
+      if (hearAbout)  noteParts.push('How they heard: ' + hearAbout);
+      if (interests)  noteParts.push('Interested in: ' + interests);
+      if (extraNotes) noteParts.push(extraNotes);
+
+      // Insert lead
+      const { data: lead, error: leadErr } = await db.from('crm_leads').insert({
+        company_id:            companyId,
+        company_name:          bizName,
+        status:                'New',
+        source:                'Web Form',
+        industry:              document.getElementById('bizIndustry').value   || null,
+        website:               document.getElementById('bizWebsite').value.trim() || null,
+        billing_address:       billingAddress,
+        billing_contact_name:  billingContactName,
+        billing_contact_email: billingContactEmail,
+        billing_contact_phone: billingContactPhone,
+        billing_contact_title: billingContactTitle,
+        shipping_address:      shippingAddress,
+        preferred_payment:     document.getElementById('preferredPayment').value || null,
+        w9_url:                w9Url,
+        w9_file_name:          w9FileName,
+        w9_uploaded_at:        w9UploadedAt,
+        notes:                 noteParts.join('\n\n') || null
+      }).select().single();
+
+      if (leadErr) throw leadErr;
+
+      // Insert main contact (always primary)
+      const { error: contactErr } = await db.from('crm_contacts').insert({
+        company_id: resolvedCompanyId,
+        lead_id:    lead.id,
+        first_name: mainFirst,
+        last_name:  mainLast,
+        email:      mainEmail,
+        phone:      mainPhone,
+        title:      document.getElementById('mainTitle').value.trim() || null,
+        is_primary: true
+      });
+      if (contactErr) throw contactErr;
+
+      // Insert billing contact if different from main
+      if (!sameContact && (billingContactName || billingContactEmail)) {
+        await db.from('crm_contacts').insert({
+          company_id: resolvedCompanyId,
+          lead_id:    lead.id,
+          first_name: billingContactFirst || null,
+          last_name:  billingContactLast  || null,
+          email:      billingContactEmail,
+          phone:      billingContactPhone,
+          title:      billingContactTitle || 'Billing Contact',
+          is_primary: false
+        });
+      }
+
+      // Success
+      document.getElementById('onboardingForm').style.display = 'none';
+      document.getElementById('successScreen').style.display  = 'block';
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+
+    } catch (ex) {
+      err.textContent = 'Submission failed: ' + (ex.message || 'Unknown error. Please try again or call us directly.');
+      btn.disabled    = false;
+      btn.textContent = 'Submit Application';
+    }
+  });
+
+  init();
+</script>
+</body>
+</html>

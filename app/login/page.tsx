@@ -91,7 +91,10 @@ export default function LoginPage() {
         {/* Bottom */}
         <div className="relative z-10">
           <p className="text-blue-400 text-sm">
-            Need access? Contact Twin Harbors Medical Supply.
+            Not a customer yet?{' '}
+            <a href="/onboarding.html?co=twin-harbors" className="text-blue-300 underline hover:text-white transition-colors">
+              Apply here
+            </a>
           </p>
         </div>
       </div>
@@ -160,8 +163,10 @@ export default function LoginPage() {
           </form>
 
           <p className="mt-8 text-center text-xs text-slate-400">
-            Don&apos;t have access?{' '}
-            <span className="text-[#1a4a8a] font-medium">Contact Twin Harbors Medical Supply</span>
+            Not a customer yet?{' '}
+            <a href="/onboarding.html?co=twin-harbors" className="text-[#1a4a8a] font-medium hover:underline">
+              Apply to become a customer
+            </a>
           </p>
         </div>
       </div>
