@@ -488,7 +488,9 @@
       if (extraNotes) noteParts.push(extraNotes);
 
       // Insert lead
-      const { data: lead, error: leadErr } = await db.from('crm_leads').insert({
+      const leadId = crypto.randomUUID();
+      const { error: leadErr } = await db.from('crm_leads').insert({
+        id:                    leadId,
         company_id:            resolvedCompanyId,
         company_name:          bizName,
         status:                'New',
@@ -506,14 +508,14 @@
         w9_file_name:          w9FileName,
         w9_uploaded_at:        w9UploadedAt,
         notes:                 noteParts.join('\n\n') || null
-      }).select().single();
+      });
 
       if (leadErr) throw leadErr;
 
       // Insert main contact (always primary)
       const { error: contactErr } = await db.from('crm_contacts').insert({
         company_id: resolvedCompanyId,
-        lead_id:    lead.id,
+        lead_id:    leadId,
         first_name: mainFirst,
         last_name:  mainLast,
         email:      mainEmail,
@@ -527,7 +529,7 @@
       if (!sameContact && (billingContactName || billingContactEmail)) {
         await db.from('crm_contacts').insert({
           company_id: resolvedCompanyId,
-          lead_id:    lead.id,
+          lead_id:    leadId,
           first_name: billingContactFirst || null,
           last_name:  billingContactLast  || null,
           email:      billingContactEmail,
