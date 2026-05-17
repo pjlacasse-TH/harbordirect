@@ -489,7 +489,7 @@
 
       // Insert lead
       const { data: lead, error: leadErr } = await db.from('crm_leads').insert({
-        company_id:            companyId,
+        company_id:            resolvedCompanyId,
         company_name:          bizName,
         status:                'New',
         source:                'Web Form',
