@@ -23,7 +23,7 @@
     body { margin: 0; background: linear-gradient(135deg, var(--bg), #e8eefc); color: var(--text); font-family: 'DM Sans', system-ui, sans-serif; min-height: 100vh; padding: 32px 16px 64px; }
     .wrap { max-width: 700px; margin: 0 auto; }
     .header { text-align: center; margin-bottom: 32px; }
-    .logo { display: block; margin: 0 auto 20px; max-width: 220px; max-height: 80px; width: auto; height: auto; object-fit: contain; }
+    .logo { display: block; margin: 0 auto 20px; max-width: 300px; max-height: 110px; width: auto; height: auto; object-fit: contain; }
     .logo-initials { width: 80px; height: 80px; border-radius: 50%; background: var(--accent); color: #fff; font-family: 'Sora', sans-serif; font-size: 24px; font-weight: 800; display: none; align-items: center; justify-content: center; margin: 0 auto 20px; }
     .header .company-label { font-family: 'Sora', sans-serif; font-weight: 700; color: var(--accent); font-size: 1.05rem; margin: 0 0 6px; }
     .header h1 { font-family: 'Sora', sans-serif; font-weight: 800; font-size: 1.75rem; color: var(--accent2); margin: 0 0 8px; letter-spacing: -.02em; }
@@ -93,7 +93,6 @@
   <div class="header">
     <img id="companyLogo" class="logo" src="" alt="" style="display:none">
     <div id="companyInitials" class="logo-initials"></div>
-    <div id="companyLabel" class="company-label"></div>
     <h1>New Customer Application</h1>
     <p>Fill out this form to get started as a customer. We'll review your information and be in touch shortly.</p>
   </div>
@@ -351,7 +350,6 @@
 
     resolvedCompanyId = co.id;
     document.title = 'New Customer Application — ' + co.company_name;
-    document.getElementById('companyLabel').textContent = co.company_name;
 
     if (co.company_logo_url) {
       const img = document.getElementById('companyLogo');
