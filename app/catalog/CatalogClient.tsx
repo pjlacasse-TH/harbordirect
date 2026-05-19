@@ -100,7 +100,7 @@ function ProductCard({
   return (
     <div className="bg-white rounded-xl border border-slate-200 shadow-sm flex flex-col overflow-hidden hover:shadow-md transition-shadow">
       {/* Image */}
-      <div className="relative bg-slate-100 h-44 flex items-center justify-center">
+      <div className="relative bg-slate-100 h-36 sm:h-44 flex items-center justify-center">
         {item.image_url ? (
           <Image
             src={item.image_url}
@@ -275,12 +275,12 @@ function CartSidebar({
                     <div className="flex items-center gap-2 mt-1.5">
                       <button
                         onClick={() => onQty(key, -1)}
-                        className="w-6 h-6 rounded border border-slate-200 text-slate-600 text-sm flex items-center justify-center hover:bg-slate-50"
+                        className="w-8 h-8 rounded border border-slate-200 text-slate-600 text-sm flex items-center justify-center hover:bg-slate-50"
                       >−</button>
                       <span className="text-sm font-medium w-4 text-center">{entry.qty}</span>
                       <button
                         onClick={() => onQty(key, 1)}
-                        className="w-6 h-6 rounded border border-slate-200 text-slate-600 text-sm flex items-center justify-center hover:bg-slate-50"
+                        className="w-8 h-8 rounded border border-slate-200 text-slate-600 text-sm flex items-center justify-center hover:bg-slate-50"
                       >+</button>
                       <button
                         onClick={() => onRemove(key)}
@@ -389,7 +389,7 @@ function VariantCard({
   return (
     <div className="bg-white rounded-xl border border-slate-200 shadow-sm flex flex-col overflow-hidden hover:shadow-md transition-shadow">
       {/* Image */}
-      <div className="relative bg-slate-100 h-44 flex items-center justify-center">
+      <div className="relative bg-slate-100 h-36 sm:h-44 flex items-center justify-center">
         {groupImage ? (
           <Image src={groupImage} alt={groupName} fill className="object-contain p-3"
             sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw" />
@@ -420,19 +420,31 @@ function VariantCard({
 
         {/* Variant selector buttons */}
         <div className="flex flex-wrap gap-1.5">
-          {variants.map((v, i) => (
-            <button
-              key={v.id}
-              onClick={() => handleVariantSelect(i)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition-colors ${
-                i === selectedIdx
-                  ? 'bg-[#0d2240] text-white border-[#0d2240]'
-                  : 'bg-white text-slate-600 border-slate-200 hover:border-[#0d2240] hover:text-[#0d2240]'
-              }`}
-            >
-              {v.variant_label || v.sku}
-            </button>
-          ))}
+          {variants.map((v, i) => {
+            const vStatus = stockStatus(v)
+            const isOut = vStatus === 'out'
+            const isLow = vStatus === 'low'
+            const isSelected = i === selectedIdx
+            return (
+              <button
+                key={v.id}
+                onClick={() => !isOut && handleVariantSelect(i)}
+                disabled={isOut}
+                className={`relative px-3 py-1.5 rounded-lg text-xs font-semibold border transition-colors ${
+                  isOut
+                    ? 'bg-slate-50 text-slate-300 border-slate-200 cursor-not-allowed line-through'
+                    : isSelected
+                      ? 'bg-[#0d2240] text-white border-[#0d2240]'
+                      : 'bg-white text-slate-600 border-slate-200 hover:border-[#0d2240] hover:text-[#0d2240]'
+                }`}
+              >
+                {v.variant_label || v.sku}
+                {isLow && !isOut && (
+                  <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-amber-400 border border-white" />
+                )}
+              </button>
+            )
+          })}
         </div>
 
         {/* Mode toggle */}

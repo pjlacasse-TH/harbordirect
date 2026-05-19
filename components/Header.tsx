@@ -62,7 +62,7 @@ export default function Header({ email, cartCount = 0, onCartClick }: HeaderProp
 
             <button
               onClick={handleSignOut}
-              className="text-sm text-blue-200 hover:text-white transition-colors px-3 py-1.5 rounded-lg hover:bg-white/10"
+              className="text-sm text-blue-200 hover:text-white transition-colors px-3 py-2 rounded-lg hover:bg-white/10"
             >
               Sign out
             </button>

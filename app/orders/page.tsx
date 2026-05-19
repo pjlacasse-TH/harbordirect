@@ -78,7 +78,7 @@ export default async function OrdersPage() {
         </div>
         <Link
           href="/catalog"
-          className="text-sm text-blue-200 hover:text-white transition-colors"
+          className="text-sm text-blue-200 hover:text-white transition-colors px-3 py-2 rounded-lg hover:bg-white/10"
         >
           ← Back to Catalog
         </Link>
@@ -116,12 +116,29 @@ export default async function OrdersPage() {
                 </div>
 
                 {/* Line items */}
-                <div className="px-6 py-3">
-                  <table className="w-full text-sm">
+                <div className="py-2">
+                  {/* Mobile card list */}
+                  <ul className="sm:hidden divide-y divide-gray-100">
+                    {order.portal_order_items.map(li => (
+                      <li key={li.id} className="flex items-start justify-between px-4 py-3 gap-3">
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium text-gray-800 text-sm leading-snug">{li.item_name}</p>
+                          <p className="text-xs text-gray-400 mt-0.5">{li.sku}</p>
+                          <p className="text-xs text-gray-500 mt-1 capitalize">
+                            {li.sell_mode} · {li.qty} × {money(li.unit_price)}
+                          </p>
+                        </div>
+                        <p className="font-semibold text-gray-800 text-sm whitespace-nowrap pt-0.5">{money(li.line_total)}</p>
+                      </li>
+                    ))}
+                  </ul>
+
+                  {/* Desktop table */}
+                  <table className="w-full text-sm hidden sm:table px-6">
                     <tbody className="divide-y divide-gray-50">
                       {order.portal_order_items.map(li => (
                         <tr key={li.id}>
-                          <td className="py-2.5 pr-4">
+                          <td className="py-2.5 px-6 pr-4">
                             <p className="font-medium text-gray-800">{li.item_name}</p>
                             <p className="text-xs text-gray-400">{li.sku}</p>
                           </td>
@@ -132,7 +149,7 @@ export default async function OrdersPage() {
                           </td>
                           <td className="py-2.5 px-3 text-center text-gray-600">×{li.qty}</td>
                           <td className="py-2.5 px-3 text-right text-gray-500">{money(li.unit_price)}</td>
-                          <td className="py-2.5 pl-3 text-right font-semibold text-gray-800">{money(li.line_total)}</td>
+                          <td className="py-2.5 pl-3 pr-6 text-right font-semibold text-gray-800">{money(li.line_total)}</td>
                         </tr>
                       ))}
                     </tbody>

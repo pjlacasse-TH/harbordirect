@@ -100,7 +100,7 @@ export default function CheckoutClient({ email }: { email: string }) {
         </div>
         <button
           onClick={() => router.push('/catalog')}
-          className="text-sm text-blue-200 hover:text-white transition-colors"
+          className="text-sm text-blue-200 hover:text-white transition-colors px-3 py-2 rounded-lg hover:bg-white/10"
         >
           ← Back to Catalog
         </button>
@@ -111,7 +111,28 @@ export default function CheckoutClient({ email }: { email: string }) {
 
         {/* Order items */}
         <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
-          <table className="w-full text-sm">
+          {/* Mobile card list */}
+          <ul className="sm:hidden divide-y divide-gray-100">
+            {items.map((item, i) => (
+              <li key={i} className="flex items-start justify-between px-4 py-3.5 gap-3">
+                <div className="flex-1 min-w-0">
+                  <p className="font-medium text-gray-800 text-sm leading-snug">{item.item_name}</p>
+                  <p className="text-xs text-gray-400 mt-0.5">{item.sku}</p>
+                  <p className="text-xs text-gray-500 mt-1 capitalize">
+                    {item.mode} · {item.qty} × {money(item.unit_price)}
+                  </p>
+                </div>
+                <p className="font-semibold text-gray-800 text-sm whitespace-nowrap pt-0.5">{money(item.line_total)}</p>
+              </li>
+            ))}
+            <li className="flex justify-between px-4 py-3.5 bg-gray-50 border-t-2 border-gray-200">
+              <span className="font-bold text-gray-700 text-sm">Subtotal</span>
+              <span className="font-bold text-[#0d2240]">{money(subtotal)}</span>
+            </li>
+          </ul>
+
+          {/* Desktop table */}
+          <table className="w-full text-sm hidden sm:table">
             <thead className="bg-gray-50 border-b border-gray-200">
               <tr>
                 <th className="text-left px-5 py-3 font-semibold text-gray-600">Item</th>
