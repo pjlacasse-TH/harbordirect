@@ -30,10 +30,14 @@ export default function CheckoutClient({ email }: { email: string }) {
     setSubmitting(true)
     setError('')
     try {
-      const { checkoutUrl } = await placeOrder(items, notes)
+      const result = await placeOrder(items, notes)
+      if (result.error) {
+        setError(result.error)
+        setSubmitting(false)
+        return
+      }
       sessionStorage.removeItem('hd_cart')
-      // Redirect to Stripe hosted checkout
-      window.location.href = checkoutUrl
+      window.location.href = result.checkoutUrl!
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : 'Failed to start checkout')
       setSubmitting(false)
