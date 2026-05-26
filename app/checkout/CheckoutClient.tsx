@@ -15,7 +15,6 @@ export default function CheckoutClient({ email }: { email: string }) {
   const [notes, setNotes] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState('')
-  const [confirmed, setConfirmed] = useState<{ orderNumber: string } | null>(null)
 
   useEffect(() => {
     try {
@@ -31,51 +30,14 @@ export default function CheckoutClient({ email }: { email: string }) {
     setSubmitting(true)
     setError('')
     try {
-      const result = await placeOrder(items, notes)
+      const { checkoutUrl } = await placeOrder(items, notes)
       sessionStorage.removeItem('hd_cart')
-      setConfirmed({ orderNumber: result.orderNumber })
+      // Redirect to Stripe hosted checkout
+      window.location.href = checkoutUrl
     } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : 'Failed to place order')
-    } finally {
+      setError(e instanceof Error ? e.message : 'Failed to start checkout')
       setSubmitting(false)
     }
-  }
-
-  if (confirmed) {
-    return (
-      <div className="min-h-screen bg-slate-50 dark:bg-slate-900 flex flex-col">
-        <Header email={email} />
-        <div className="flex-1 flex items-center justify-center p-6">
-          <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 p-8 sm:p-10 max-w-md w-full text-center">
-            <div className="w-16 h-16 bg-emerald-100 dark:bg-emerald-950/50 rounded-full flex items-center justify-center mx-auto mb-4">
-              <svg className="w-8 h-8 text-emerald-600 dark:text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-              </svg>
-            </div>
-            <h1 className="text-2xl font-bold text-[#0d2240] dark:text-blue-200 mb-2">Order Placed!</h1>
-            <p className="text-slate-500 dark:text-slate-400 mb-1">Order number</p>
-            <p className="text-3xl font-bold text-[#0d2240] dark:text-blue-200 mb-6">{confirmed.orderNumber}</p>
-            <p className="text-sm text-slate-500 dark:text-slate-400 mb-8">
-              Your order has been received and will be reviewed shortly. You&apos;ll be contacted when it&apos;s ready.
-            </p>
-            <div className="flex flex-col gap-3">
-              <button
-                onClick={() => router.push('/orders')}
-                className="w-full py-3 bg-[#0d2240] text-white font-semibold rounded-lg hover:bg-[#1a3a6a] transition-colors"
-              >
-                View My Orders
-              </button>
-              <button
-                onClick={() => router.push('/catalog')}
-                className="w-full py-3 border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 font-semibold rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors"
-              >
-                Back to Catalog
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-    )
   }
 
   if (items.length === 0) {
@@ -106,7 +68,7 @@ export default function CheckoutClient({ email }: { email: string }) {
 
         {/* Order items */}
         <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden">
-          {/* Mobile card list */}
+          {/* Mobile list */}
           <ul className="sm:hidden divide-y divide-slate-100 dark:divide-slate-700">
             {items.map((item, i) => (
               <li key={i} className="flex items-start justify-between px-4 py-3.5 gap-3">
@@ -145,9 +107,7 @@ export default function CheckoutClient({ email }: { email: string }) {
                     <p className="text-xs text-slate-400 dark:text-slate-500">{item.sku}</p>
                   </td>
                   <td className="px-3 py-4 text-center">
-                    <span className="text-xs bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-400 px-2 py-0.5 rounded-full capitalize">
-                      {item.mode}
-                    </span>
+                    <span className="text-xs bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-400 px-2 py-0.5 rounded-full capitalize">{item.mode}</span>
                   </td>
                   <td className="px-3 py-4 text-center text-slate-700 dark:text-slate-300">{item.qty}</td>
                   <td className="px-3 py-4 text-right text-slate-700 dark:text-slate-300">{money(item.unit_price)}</td>
@@ -184,13 +144,35 @@ export default function CheckoutClient({ email }: { email: string }) {
           </div>
         )}
 
-        <button
-          onClick={handleSubmit}
-          disabled={submitting}
-          className="w-full py-4 bg-[#0d2240] hover:bg-[#1a3a6a] disabled:opacity-50 text-white font-bold text-base rounded-xl transition-colors"
-        >
-          {submitting ? 'Placing Order...' : `Place Order — ${money(subtotal)}`}
-        </button>
+        {/* Stripe CTA */}
+        <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm p-5">
+          <div className="flex items-center justify-between mb-4">
+            <span className="text-slate-600 dark:text-slate-400 text-sm">You will be redirected to Stripe to complete payment securely.</span>
+            <div className="flex items-center gap-1.5 text-slate-400 dark:text-slate-500">
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+              </svg>
+              <span className="text-xs font-medium">Secure</span>
+            </div>
+          </div>
+          <button
+            onClick={handleSubmit}
+            disabled={submitting}
+            className="w-full py-4 bg-[#0d2240] hover:bg-[#1a3a6a] disabled:opacity-50 text-white font-bold text-base rounded-xl transition-colors flex items-center justify-center gap-3"
+          >
+            {submitting ? (
+              <>
+                <svg className="animate-spin w-5 h-5" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                </svg>
+                Redirecting to payment…
+              </>
+            ) : (
+              <>Pay {money(subtotal)} — Proceed to Checkout</>
+            )}
+          </button>
+        </div>
       </div>
     </div>
   )

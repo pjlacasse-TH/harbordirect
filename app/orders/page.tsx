@@ -2,25 +2,62 @@ import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { redirect } from 'next/navigation'
 import Header from '@/components/Header'
+import Link from 'next/link'
 
 function money(n: number) {
   return '$' + Number(n).toFixed(2)
-}
-
-function statusBadge(status: string) {
-  const map: Record<string, string> = {
-    pending: 'bg-amber-100 dark:bg-amber-950/50 text-amber-800 dark:text-amber-400 border-amber-200 dark:border-amber-800',
-    confirmed: 'bg-blue-100 dark:bg-blue-950/50 text-blue-800 dark:text-blue-400 border-blue-200 dark:border-blue-800',
-    fulfilled: 'bg-emerald-100 dark:bg-emerald-950/50 text-emerald-800 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800',
-    cancelled: 'bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400 border-slate-200 dark:border-slate-600',
-  }
-  return map[status] ?? 'bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400 border-slate-200 dark:border-slate-600'
 }
 
 function formatDate(ts: string) {
   return new Date(ts).toLocaleDateString('en-US', {
     year: 'numeric', month: 'short', day: 'numeric',
   })
+}
+
+function trackingUrl(carrier: string | null, number: string): string {
+  const n = encodeURIComponent(number)
+  switch ((carrier ?? '').toLowerCase()) {
+    case 'fedex': return `https://www.fedex.com/fedextrack/?trknbr=${n}`
+    case 'ups':   return `https://www.ups.com/track?tracknum=${n}`
+    case 'usps':  return `https://tools.usps.com/go/TrackConfirmAction?tLabels=${n}`
+    default:      return `https://www.google.com/search?q=${n}+tracking`
+  }
+}
+
+type StatusKey = 'pending_payment' | 'pending' | 'confirmed' | 'fulfilled' | 'cancelled'
+
+function StatusBadge({ status }: { status: string }) {
+  const map: Record<StatusKey, { label: string; cls: string }> = {
+    pending_payment: {
+      label: 'Awaiting Payment',
+      cls: 'bg-amber-100 dark:bg-amber-950/50 text-amber-800 dark:text-amber-400 border-amber-200 dark:border-amber-800',
+    },
+    pending: {
+      label: 'Pending',
+      cls: 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-600',
+    },
+    confirmed: {
+      label: 'Paid & Confirmed',
+      cls: 'bg-blue-100 dark:bg-blue-950/50 text-blue-800 dark:text-blue-400 border-blue-200 dark:border-blue-800',
+    },
+    fulfilled: {
+      label: 'Shipped',
+      cls: 'bg-emerald-100 dark:bg-emerald-950/50 text-emerald-800 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800',
+    },
+    cancelled: {
+      label: 'Cancelled',
+      cls: 'bg-slate-100 dark:bg-slate-700 text-slate-400 dark:text-slate-500 border-slate-200 dark:border-slate-600',
+    },
+  }
+  const cfg = map[status as StatusKey] ?? {
+    label: status,
+    cls: 'bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400 border-slate-200 dark:border-slate-600',
+  }
+  return (
+    <span className={`text-xs font-semibold px-2.5 py-0.5 rounded-full border capitalize ${cfg.cls}`}>
+      {cfg.label}
+    </span>
+  )
 }
 
 export default async function OrdersPage() {
@@ -37,22 +74,13 @@ export default async function OrdersPage() {
     .maybeSingle()
 
   type OrderItem = {
-    id: string
-    item_name: string
-    sku: string
-    sell_mode: string
-    qty: number
-    unit_price: number
-    line_total: number
+    id: string; item_name: string; sku: string
+    sell_mode: string; qty: number; unit_price: number; line_total: number
   }
-
   type Order = {
-    id: string
-    order_number: string
-    status: string
-    subtotal: number
-    notes: string | null
-    placed_at: string
+    id: string; order_number: string; status: string
+    subtotal: number; notes: string | null; placed_at: string
+    paid_at: string | null; carrier: string | null; tracking_number: string | null
     portal_order_items: OrderItem[]
   }
 
@@ -62,9 +90,11 @@ export default async function OrdersPage() {
       .from('portal_orders')
       .select(`
         id, order_number, status, subtotal, notes, placed_at,
+        paid_at, carrier, tracking_number,
         portal_order_items(id, item_name, sku, sell_mode, qty, unit_price, line_total)
       `)
       .eq('customer_id', customer.id)
+      .neq('status', 'pending_payment') // hide unpaid abandoned sessions
       .order('placed_at', { ascending: false })
     orders = (data as Order[]) ?? []
   }
@@ -79,34 +109,66 @@ export default async function OrdersPage() {
         {orders.length === 0 ? (
           <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm p-12 sm:p-16 text-center text-slate-400 dark:text-slate-500">
             <p className="mb-4">No orders placed yet.</p>
-            <a
-              href="/catalog"
-              className="text-sm text-[#0d2240] dark:text-blue-400 font-semibold hover:underline"
-            >
+            <Link href="/catalog" className="text-sm text-[#0d2240] dark:text-blue-400 font-semibold hover:underline">
               Browse the catalog →
-            </a>
+            </Link>
           </div>
         ) : (
           <div className="flex flex-col gap-4">
             {orders.map(order => (
               <div key={order.id} className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden">
                 {/* Order header */}
-                <div className="px-4 sm:px-6 py-4 border-b border-slate-100 dark:border-slate-700 flex flex-wrap items-center justify-between gap-3">
-                  <div className="flex items-center gap-3 flex-wrap">
-                    <span className="text-base sm:text-lg font-bold text-[#0d2240] dark:text-blue-200">{order.order_number}</span>
-                    <span className={`text-xs font-medium px-2.5 py-0.5 rounded-full border capitalize ${statusBadge(order.status)}`}>
-                      {order.status}
-                    </span>
+                <div className="px-4 sm:px-6 py-4 border-b border-slate-100 dark:border-slate-700 flex flex-wrap items-start justify-between gap-3">
+                  <div className="flex flex-col gap-1.5">
+                    <div className="flex items-center gap-3 flex-wrap">
+                      <span className="text-base sm:text-lg font-bold text-[#0d2240] dark:text-blue-200">{order.order_number}</span>
+                      <StatusBadge status={order.status} />
+                    </div>
+                    <span className="text-xs text-slate-400 dark:text-slate-500">{formatDate(order.placed_at)}</span>
                   </div>
-                  <div className="flex items-center gap-4 text-sm text-slate-500 dark:text-slate-400">
-                    <span>{formatDate(order.placed_at)}</span>
-                    <span className="font-bold text-[#0d2240] dark:text-blue-200 text-base">{money(order.subtotal)}</span>
+                  <div className="text-right">
+                    <div className="font-bold text-[#0d2240] dark:text-blue-200 text-base">{money(order.subtotal)}</div>
+                    {order.paid_at && (
+                      <div className="text-xs text-emerald-600 dark:text-emerald-400 mt-0.5">
+                        Paid {formatDate(order.paid_at)}
+                      </div>
+                    )}
                   </div>
                 </div>
 
+                {/* Tracking banner — shown when shipped */}
+                {order.tracking_number && (
+                  <div className="px-4 sm:px-6 py-3 bg-blue-50 dark:bg-blue-950/30 border-b border-blue-100 dark:border-blue-900 flex items-center gap-3">
+                    <svg className="w-4 h-4 text-blue-600 dark:text-blue-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10" />
+                    </svg>
+                    <div className="flex-1 min-w-0">
+                      <span className="text-sm font-medium text-blue-800 dark:text-blue-300">
+                        {order.carrier && <span className="mr-1">{order.carrier}</span>}
+                        Tracking:
+                      </span>
+                      <a
+                        href={trackingUrl(order.carrier, order.tracking_number)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="ml-1.5 text-sm font-bold text-blue-700 dark:text-blue-400 underline underline-offset-2 hover:text-blue-900 dark:hover:text-blue-300 font-mono"
+                      >
+                        {order.tracking_number}
+                      </a>
+                    </div>
+                    <a
+                      href={trackingUrl(order.carrier, order.tracking_number)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-xs font-semibold text-blue-700 dark:text-blue-400 hover:underline whitespace-nowrap"
+                    >
+                      Track →
+                    </a>
+                  </div>
+                )}
+
                 {/* Line items */}
                 <div className="py-2">
-                  {/* Mobile card list */}
                   <ul className="sm:hidden divide-y divide-slate-100 dark:divide-slate-700">
                     {order.portal_order_items.map(li => (
                       <li key={li.id} className="flex items-start justify-between px-4 py-3 gap-3">
@@ -122,7 +184,6 @@ export default async function OrdersPage() {
                     ))}
                   </ul>
 
-                  {/* Desktop table */}
                   <table className="w-full text-sm hidden sm:table">
                     <tbody className="divide-y divide-slate-50 dark:divide-slate-700/50">
                       {order.portal_order_items.map(li => (
@@ -132,9 +193,7 @@ export default async function OrdersPage() {
                             <p className="text-xs text-slate-400 dark:text-slate-500">{li.sku}</p>
                           </td>
                           <td className="py-2.5 px-3 text-center">
-                            <span className="text-xs bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400 px-2 py-0.5 rounded-full capitalize">
-                              {li.sell_mode}
-                            </span>
+                            <span className="text-xs bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400 px-2 py-0.5 rounded-full capitalize">{li.sell_mode}</span>
                           </td>
                           <td className="py-2.5 px-3 text-center text-slate-600 dark:text-slate-400">×{li.qty}</td>
                           <td className="py-2.5 px-3 text-right text-slate-500 dark:text-slate-400">{money(li.unit_price)}</td>
