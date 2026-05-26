@@ -8,7 +8,7 @@ export default function Footer() {
         </svg>
         <span>HarborDirect &middot; Twin Harbors Medical Supply</span>
       </div>
-      <span>v2.0.2</span>
+      <span>v2.0.3</span>
     </footer>
   )
 }
