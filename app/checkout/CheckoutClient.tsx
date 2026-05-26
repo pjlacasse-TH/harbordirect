@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { placeOrder, type CartItem } from './actions'
+import Header from '@/components/Header'
 
 function money(n: number) {
   return '$' + n.toFixed(2)
@@ -42,29 +43,51 @@ export default function CheckoutClient({ email }: { email: string }) {
 
   if (confirmed) {
     return (
-      <div className="min-h-screen bg-[#f0f4f8] flex items-center justify-center p-6">
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-10 max-w-md w-full text-center">
-          <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <svg className="w-8 h-8 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-            </svg>
+      <div className="min-h-screen bg-slate-50 dark:bg-slate-900 flex flex-col">
+        <Header email={email} />
+        <div className="flex-1 flex items-center justify-center p-6">
+          <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 p-8 sm:p-10 max-w-md w-full text-center">
+            <div className="w-16 h-16 bg-emerald-100 dark:bg-emerald-950/50 rounded-full flex items-center justify-center mx-auto mb-4">
+              <svg className="w-8 h-8 text-emerald-600 dark:text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              </svg>
+            </div>
+            <h1 className="text-2xl font-bold text-[#0d2240] dark:text-blue-200 mb-2">Order Placed!</h1>
+            <p className="text-slate-500 dark:text-slate-400 mb-1">Order number</p>
+            <p className="text-3xl font-bold text-[#0d2240] dark:text-blue-200 mb-6">{confirmed.orderNumber}</p>
+            <p className="text-sm text-slate-500 dark:text-slate-400 mb-8">
+              Your order has been received and will be reviewed shortly. You&apos;ll be contacted when it&apos;s ready.
+            </p>
+            <div className="flex flex-col gap-3">
+              <button
+                onClick={() => router.push('/orders')}
+                className="w-full py-3 bg-[#0d2240] text-white font-semibold rounded-lg hover:bg-[#1a3a6a] transition-colors"
+              >
+                View My Orders
+              </button>
+              <button
+                onClick={() => router.push('/catalog')}
+                className="w-full py-3 border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 font-semibold rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors"
+              >
+                Back to Catalog
+              </button>
+            </div>
           </div>
-          <h1 className="text-2xl font-bold text-[#0d2240] mb-2">Order Placed!</h1>
-          <p className="text-gray-500 mb-1">Order number</p>
-          <p className="text-3xl font-bold text-[#0d2240] mb-6">{confirmed.orderNumber}</p>
-          <p className="text-sm text-gray-500 mb-8">
-            Your order has been received and will be reviewed shortly. You&apos;ll be contacted when it&apos;s ready.
-          </p>
-          <div className="flex flex-col gap-3">
-            <button
-              onClick={() => router.push('/orders')}
-              className="w-full py-3 bg-[#0d2240] text-white font-semibold rounded-lg hover:bg-[#1a3a6a] transition-colors"
-            >
-              View My Orders
-            </button>
+        </div>
+      </div>
+    )
+  }
+
+  if (items.length === 0) {
+    return (
+      <div className="min-h-screen bg-slate-50 dark:bg-slate-900 flex flex-col">
+        <Header email={email} />
+        <div className="flex-1 flex items-center justify-center p-6">
+          <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 p-10 max-w-md w-full text-center">
+            <p className="text-slate-500 dark:text-slate-400 mb-6">Your cart is empty.</p>
             <button
               onClick={() => router.push('/catalog')}
-              className="w-full py-3 border border-gray-300 text-gray-700 font-semibold rounded-lg hover:bg-gray-50 transition-colors"
+              className="py-3 px-6 bg-[#0d2240] text-white font-semibold rounded-lg hover:bg-[#1a3a6a] transition-colors"
             >
               Back to Catalog
             </button>
@@ -74,117 +97,89 @@ export default function CheckoutClient({ email }: { email: string }) {
     )
   }
 
-  if (items.length === 0) {
-    return (
-      <div className="min-h-screen bg-[#f0f4f8] flex items-center justify-center p-6">
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-10 max-w-md w-full text-center">
-          <p className="text-gray-500 mb-6">Your cart is empty.</p>
-          <button
-            onClick={() => router.push('/catalog')}
-            className="py-3 px-6 bg-[#0d2240] text-white font-semibold rounded-lg hover:bg-[#1a3a6a] transition-colors"
-          >
-            Back to Catalog
-          </button>
-        </div>
-      </div>
-    )
-  }
-
   return (
-    <div className="min-h-screen bg-[#f0f4f8]">
-      {/* Header */}
-      <header className="bg-[#0d2240] text-white px-6 py-4 flex items-center justify-between">
-        <div>
-          <h1 className="text-xl font-bold tracking-tight">HarborDirect</h1>
-          <p className="text-xs text-blue-200">{email}</p>
-        </div>
-        <button
-          onClick={() => router.push('/catalog')}
-          className="text-sm text-blue-200 hover:text-white transition-colors px-3 py-2 rounded-lg hover:bg-white/10"
-        >
-          ← Back to Catalog
-        </button>
-      </header>
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-900 flex flex-col">
+      <Header email={email} />
 
-      <div className="max-w-3xl mx-auto p-6 flex flex-col gap-6">
-        <h2 className="text-2xl font-bold text-[#0d2240]">Review Your Order</h2>
+      <div className="max-w-3xl mx-auto w-full px-4 sm:px-6 py-6 sm:py-8 flex flex-col gap-6 flex-1">
+        <h2 className="text-xl sm:text-2xl font-bold text-[#0d2240] dark:text-blue-200">Review Your Order</h2>
 
         {/* Order items */}
-        <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+        <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden">
           {/* Mobile card list */}
-          <ul className="sm:hidden divide-y divide-gray-100">
+          <ul className="sm:hidden divide-y divide-slate-100 dark:divide-slate-700">
             {items.map((item, i) => (
               <li key={i} className="flex items-start justify-between px-4 py-3.5 gap-3">
                 <div className="flex-1 min-w-0">
-                  <p className="font-medium text-gray-800 text-sm leading-snug">{item.item_name}</p>
-                  <p className="text-xs text-gray-400 mt-0.5">{item.sku}</p>
-                  <p className="text-xs text-gray-500 mt-1 capitalize">
+                  <p className="font-medium text-slate-800 dark:text-slate-200 text-sm leading-snug">{item.item_name}</p>
+                  <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">{item.sku}</p>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 capitalize">
                     {item.mode} · {item.qty} × {money(item.unit_price)}
                   </p>
                 </div>
-                <p className="font-semibold text-gray-800 text-sm whitespace-nowrap pt-0.5">{money(item.line_total)}</p>
+                <p className="font-semibold text-slate-800 dark:text-slate-200 text-sm whitespace-nowrap pt-0.5">{money(item.line_total)}</p>
               </li>
             ))}
-            <li className="flex justify-between px-4 py-3.5 bg-gray-50 border-t-2 border-gray-200">
-              <span className="font-bold text-gray-700 text-sm">Subtotal</span>
-              <span className="font-bold text-[#0d2240]">{money(subtotal)}</span>
+            <li className="flex justify-between px-4 py-3.5 bg-slate-50 dark:bg-slate-700/50 border-t-2 border-slate-200 dark:border-slate-600">
+              <span className="font-bold text-slate-700 dark:text-slate-300 text-sm">Subtotal</span>
+              <span className="font-bold text-[#0d2240] dark:text-blue-200">{money(subtotal)}</span>
             </li>
           </ul>
 
           {/* Desktop table */}
           <table className="w-full text-sm hidden sm:table">
-            <thead className="bg-gray-50 border-b border-gray-200">
+            <thead className="bg-slate-50 dark:bg-slate-700/50 border-b border-slate-200 dark:border-slate-700">
               <tr>
-                <th className="text-left px-5 py-3 font-semibold text-gray-600">Item</th>
-                <th className="text-center px-3 py-3 font-semibold text-gray-600">Mode</th>
-                <th className="text-center px-3 py-3 font-semibold text-gray-600">Qty</th>
-                <th className="text-right px-3 py-3 font-semibold text-gray-600">Unit</th>
-                <th className="text-right px-5 py-3 font-semibold text-gray-600">Total</th>
+                <th className="text-left px-5 py-3 font-semibold text-slate-600 dark:text-slate-300">Item</th>
+                <th className="text-center px-3 py-3 font-semibold text-slate-600 dark:text-slate-300">Mode</th>
+                <th className="text-center px-3 py-3 font-semibold text-slate-600 dark:text-slate-300">Qty</th>
+                <th className="text-right px-3 py-3 font-semibold text-slate-600 dark:text-slate-300">Unit</th>
+                <th className="text-right px-5 py-3 font-semibold text-slate-600 dark:text-slate-300">Total</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100">
+            <tbody className="divide-y divide-slate-100 dark:divide-slate-700">
               {items.map((item, i) => (
                 <tr key={i}>
                   <td className="px-5 py-4">
-                    <p className="font-medium text-gray-800">{item.item_name}</p>
-                    <p className="text-xs text-gray-400">{item.sku}</p>
+                    <p className="font-medium text-slate-800 dark:text-slate-200">{item.item_name}</p>
+                    <p className="text-xs text-slate-400 dark:text-slate-500">{item.sku}</p>
                   </td>
                   <td className="px-3 py-4 text-center">
-                    <span className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full capitalize">
+                    <span className="text-xs bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-400 px-2 py-0.5 rounded-full capitalize">
                       {item.mode}
                     </span>
                   </td>
-                  <td className="px-3 py-4 text-center text-gray-700">{item.qty}</td>
-                  <td className="px-3 py-4 text-right text-gray-700">{money(item.unit_price)}</td>
-                  <td className="px-5 py-4 text-right font-semibold text-gray-800">{money(item.line_total)}</td>
+                  <td className="px-3 py-4 text-center text-slate-700 dark:text-slate-300">{item.qty}</td>
+                  <td className="px-3 py-4 text-right text-slate-700 dark:text-slate-300">{money(item.unit_price)}</td>
+                  <td className="px-5 py-4 text-right font-semibold text-slate-800 dark:text-slate-200">{money(item.line_total)}</td>
                 </tr>
               ))}
             </tbody>
-            <tfoot className="border-t-2 border-gray-200 bg-gray-50">
+            <tfoot className="border-t-2 border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-700/50">
               <tr>
-                <td colSpan={4} className="px-5 py-4 text-right font-bold text-gray-700">Subtotal</td>
-                <td className="px-5 py-4 text-right font-bold text-lg text-[#0d2240]">{money(subtotal)}</td>
+                <td colSpan={4} className="px-5 py-4 text-right font-bold text-slate-700 dark:text-slate-300">Subtotal</td>
+                <td className="px-5 py-4 text-right font-bold text-lg text-[#0d2240] dark:text-blue-200">{money(subtotal)}</td>
               </tr>
             </tfoot>
           </table>
         </div>
 
         {/* Notes */}
-        <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-5">
-          <label className="block text-sm font-semibold text-gray-700 mb-2">
-            Order Notes <span className="text-gray-400 font-normal">(optional)</span>
+        <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm p-5">
+          <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
+            Order Notes <span className="text-slate-400 dark:text-slate-500 font-normal">(optional)</span>
           </label>
           <textarea
             value={notes}
             onChange={e => setNotes(e.target.value)}
             rows={3}
             placeholder="Delivery instructions, special requests..."
-            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-800 resize-none focus:outline-none focus:ring-2 focus:ring-[#0d2240]/20 focus:border-[#0d2240]"
+            className="w-full border border-slate-300 dark:border-slate-600 rounded-lg px-3 py-2 text-sm text-slate-800 dark:text-slate-200 bg-white dark:bg-slate-700 resize-none focus:outline-none focus:ring-2 focus:ring-[#0d2240]/20 focus:border-[#0d2240] placeholder-slate-400 dark:placeholder-slate-500"
           />
         </div>
 
         {error && (
-          <div className="bg-red-50 border border-red-200 text-red-700 text-sm px-4 py-3 rounded-lg">
+          <div className="bg-red-50 dark:bg-red-950/50 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 text-sm px-4 py-3 rounded-lg">
             {error}
           </div>
         )}

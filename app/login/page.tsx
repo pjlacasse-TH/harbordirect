@@ -54,7 +54,7 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen flex">
-      {/* Left panel — branding */}
+      {/* Left panel — branding (always dark navy) */}
       <div className="hidden lg:flex lg:w-1/2 bg-[#0d2240] flex-col justify-between p-12 relative overflow-hidden">
         {/* Background wave decoration */}
         <div className="absolute inset-0 opacity-10">
@@ -100,25 +100,25 @@ export default function LoginPage() {
       </div>
 
       {/* Right panel — login form */}
-      <div className="flex-1 flex flex-col items-center justify-center p-8 bg-slate-50">
+      <div className="flex-1 flex flex-col items-center justify-center p-6 sm:p-8 bg-slate-50 dark:bg-slate-900">
         {/* Mobile logo */}
         <div className="lg:hidden flex items-center gap-2 mb-10">
           <svg width="32" height="20" viewBox="0 0 60 36" fill="none">
-            <path d="M4 18 Q15 8 30 18 Q45 28 56 18" stroke="#0d2240" strokeWidth="4" strokeLinecap="round" fill="none" opacity="0.5"/>
-            <path d="M4 26 Q15 16 30 26 Q45 36 56 26" stroke="#0d2240" strokeWidth="4" strokeLinecap="round" fill="none"/>
+            <path d="M4 18 Q15 8 30 18 Q45 28 56 18" stroke="#0d2240" strokeWidth="4" strokeLinecap="round" fill="none" opacity="0.5" className="dark:stroke-blue-300"/>
+            <path d="M4 26 Q15 16 30 26 Q45 36 56 26" stroke="#0d2240" strokeWidth="4" strokeLinecap="round" fill="none" className="dark:stroke-blue-200"/>
           </svg>
-          <span className="text-[#0d2240] text-xl font-bold">HarborDirect</span>
+          <span className="text-[#0d2240] dark:text-blue-200 text-xl font-bold">HarborDirect</span>
         </div>
 
         <div className="w-full max-w-sm">
           <div className="mb-8">
-            <h1 className="text-2xl font-bold text-[#0d2240] mb-1">Welcome back</h1>
-            <p className="text-slate-500 text-sm">Sign in to access your account</p>
+            <h1 className="text-2xl font-bold text-[#0d2240] dark:text-blue-200 mb-1">Welcome back</h1>
+            <p className="text-slate-500 dark:text-slate-400 text-sm">Sign in to access your account</p>
           </div>
 
           <form onSubmit={handleLogin} className="space-y-5">
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1.5">
+              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">
                 Email address
               </label>
               <input
@@ -126,14 +126,14 @@ export default function LoginPage() {
                 required
                 value={email}
                 onChange={e => setEmail(e.target.value)}
-                className="w-full px-4 py-3 rounded-lg border border-slate-200 bg-white text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#1a4a8a] focus:border-transparent transition text-sm"
+                className="w-full px-4 py-3 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-[#1a4a8a] focus:border-transparent transition text-sm"
                 placeholder="you@example.com"
                 autoComplete="email"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1.5">
+              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">
                 Password
               </label>
               <input
@@ -141,14 +141,14 @@ export default function LoginPage() {
                 required
                 value={password}
                 onChange={e => setPassword(e.target.value)}
-                className="w-full px-4 py-3 rounded-lg border border-slate-200 bg-white text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#1a4a8a] focus:border-transparent transition text-sm"
+                className="w-full px-4 py-3 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-[#1a4a8a] focus:border-transparent transition text-sm"
                 placeholder="••••••••"
                 autoComplete="current-password"
               />
             </div>
 
             {error && (
-              <div className="bg-red-50 border border-red-200 text-red-700 text-sm px-4 py-3 rounded-lg">
+              <div className="bg-red-50 dark:bg-red-950/50 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 text-sm px-4 py-3 rounded-lg">
                 {error}
               </div>
             )}
@@ -162,9 +162,9 @@ export default function LoginPage() {
             </button>
           </form>
 
-          <p className="mt-8 text-center text-xs text-slate-400">
+          <p className="mt-8 text-center text-xs text-slate-400 dark:text-slate-500">
             Not a customer yet?{' '}
-            <a href="/onboarding.html?co=twin-harbors" className="text-[#1a4a8a] font-medium hover:underline">
+            <a href="/onboarding.html?co=twin-harbors" className="text-[#1a4a8a] dark:text-blue-400 font-medium hover:underline">
               Apply to become a customer
             </a>
           </p>
