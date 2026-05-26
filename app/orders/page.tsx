@@ -3,6 +3,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { redirect } from 'next/navigation'
 import Header from '@/components/Header'
 import Link from 'next/link'
+import PrintReceiptButton from '@/components/PrintReceiptButton'
 
 function money(n: number) {
   return '$' + Number(n).toFixed(2)
@@ -59,6 +60,8 @@ function StatusBadge({ status }: { status: string }) {
     </span>
   )
 }
+
+const PAID_STATUSES = new Set(['confirmed', 'fulfilled'])
 
 export default async function OrdersPage() {
   const supabase = await createClient()
@@ -126,12 +129,15 @@ export default async function OrdersPage() {
                     </div>
                     <span className="text-xs text-slate-400 dark:text-slate-500">{formatDate(order.placed_at)}</span>
                   </div>
-                  <div className="text-right">
+                  <div className="text-right flex flex-col items-end gap-1.5">
                     <div className="font-bold text-[#0d2240] dark:text-blue-200 text-base">{money(order.subtotal)}</div>
                     {order.paid_at && (
-                      <div className="text-xs text-emerald-600 dark:text-emerald-400 mt-0.5">
+                      <div className="text-xs text-emerald-600 dark:text-emerald-400">
                         Paid {formatDate(order.paid_at)}
                       </div>
+                    )}
+                    {PAID_STATUSES.has(order.status) && (
+                      <PrintReceiptButton order={order} customerEmail={user.email ?? ''} />
                     )}
                   </div>
                 </div>
