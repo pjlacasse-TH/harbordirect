@@ -6,7 +6,7 @@ import { redirect } from 'next/navigation'
 import Stripe from 'stripe'
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2024-06-20',
+  apiVersion: '2026-04-22.dahlia',
 })
 
 const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://harbordirect.netlify.app'
