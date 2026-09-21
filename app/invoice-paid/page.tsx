@@ -13,10 +13,10 @@ export default async function InvoicePaidPage({
         {/* Logo */}
         <div className="flex items-center justify-center gap-2 mb-8">
           <svg width="28" height="18" viewBox="0 0 60 36" fill="none">
-            <path d="M4 18 Q15 8 30 18 Q45 28 56 18" stroke="#0d2240" strokeWidth="4" strokeLinecap="round" fill="none" opacity="0.5"/>
-            <path d="M4 26 Q15 16 30 26 Q45 36 56 26" stroke="#0d2240" strokeWidth="4" strokeLinecap="round" fill="none"/>
+            <path d="M4 18 Q15 8 30 18 Q45 28 56 18" stroke="var(--brand)" strokeWidth="4" strokeLinecap="round" fill="none" opacity="0.5"/>
+            <path d="M4 26 Q15 16 30 26 Q45 36 56 26" stroke="var(--brand)" strokeWidth="4" strokeLinecap="round" fill="none"/>
           </svg>
-          <span className="font-bold text-[#0d2240] dark:text-blue-200">Twin Harbors Medical Supply</span>
+          <span className="font-bold text-[var(--brand)] dark:text-blue-200">Twin Harbors Medical Supply</span>
         </div>
 
         <div className="w-16 h-16 bg-emerald-100 dark:bg-emerald-950/50 rounded-full flex items-center justify-center mx-auto mb-5">
@@ -25,7 +25,7 @@ export default async function InvoicePaidPage({
           </svg>
         </div>
 
-        <h1 className="text-2xl font-bold text-[#0d2240] dark:text-blue-200 mb-2">Payment Received!</h1>
+        <h1 className="text-2xl font-bold text-[var(--brand)] dark:text-blue-200 mb-2">Payment Received!</h1>
 
         {inv && (
           <p className="text-slate-500 dark:text-slate-400 text-sm mb-1">Invoice <strong className="text-slate-700 dark:text-slate-300">{inv}</strong> has been paid.</p>
@@ -37,7 +37,7 @@ export default async function InvoicePaidPage({
 
         <Link
           href="/catalog"
-          className="inline-block py-3 px-6 bg-[#0d2240] text-white font-semibold rounded-lg hover:bg-[#1a3a6a] transition-colors text-sm"
+          className="inline-block py-3 px-6 bg-[var(--brand)] text-white font-semibold rounded-lg hover:bg-[var(--brand-hover)] transition-colors text-sm"
         >
           Visit HarborDirect
         </Link>

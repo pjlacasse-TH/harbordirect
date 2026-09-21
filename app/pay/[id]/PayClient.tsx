@@ -91,7 +91,7 @@ export default function PayClient({
             </svg>
           </div>
           <h1 className="text-xl font-bold text-slate-800 dark:text-slate-200 mb-1">Invoice Paid</h1>
-          <p className="text-2xl font-bold text-[#0d2240] dark:text-blue-200 mb-1">{invoice.invoice_number}</p>
+          <p className="text-2xl font-bold text-[var(--brand)] dark:text-blue-200 mb-1">{invoice.invoice_number}</p>
           {invoice.paid_at && (
             <p className="text-sm text-emerald-600 dark:text-emerald-400 mb-4">
               Paid on {fmtDate(invoice.paid_at.slice(0, 10))}
@@ -131,7 +131,7 @@ export default function PayClient({
     <div className="min-h-screen bg-slate-50 dark:bg-slate-900">
       {/* Soft login banner — only if not logged in */}
       {!userEmail && (
-        <div className="bg-[#0d2240] text-white text-sm px-4 py-2.5 flex items-center justify-center gap-4 flex-wrap">
+        <div className="bg-[var(--brand)] text-white text-sm px-4 py-2.5 flex items-center justify-center gap-4 flex-wrap">
           <span className="text-blue-200">
             Have a HarborDirect account? Sign in to track orders &amp; payment history.
           </span>
@@ -158,7 +158,7 @@ export default function PayClient({
 
         {/* Invoice header card */}
         <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden mt-6">
-          <div className="bg-[#0d2240] px-6 py-5 flex flex-wrap items-start justify-between gap-3">
+          <div className="bg-[var(--brand)] px-6 py-5 flex flex-wrap items-start justify-between gap-3">
             <div>
               <p className="text-blue-300 text-xs font-semibold uppercase tracking-widest mb-1">Invoice</p>
               <p className="text-white text-2xl font-bold">{invoice.invoice_number}</p>
@@ -215,7 +215,7 @@ export default function PayClient({
                 <span>{money(tax)}</span>
               </div>
             )}
-            <div className="flex justify-between font-bold text-base text-[#0d2240] dark:text-blue-200 pt-1.5 border-t border-slate-200 dark:border-slate-600">
+            <div className="flex justify-between font-bold text-base text-[var(--brand)] dark:text-blue-200 pt-1.5 border-t border-slate-200 dark:border-slate-600">
               <span>Total Due</span>
               <span>{money(invoice.total)}</span>
             </div>
@@ -240,7 +240,7 @@ export default function PayClient({
           <button
             onClick={handlePay}
             disabled={loading}
-            className="w-full py-4 bg-[#0d2240] hover:bg-[#1a3a6a] disabled:opacity-50 text-white font-bold text-base rounded-xl transition-colors flex items-center justify-center gap-3"
+            className="w-full py-4 bg-[var(--brand)] hover:bg-[var(--brand-hover)] disabled:opacity-50 text-white font-bold text-base rounded-xl transition-colors flex items-center justify-center gap-3"
           >
             {loading ? (
               <>
@@ -268,10 +268,10 @@ function BrandHeader() {
   return (
     <div className="flex items-center justify-center gap-2.5 py-2">
       <svg width="28" height="18" viewBox="0 0 60 36" fill="none">
-        <path d="M4 18 Q15 8 30 18 Q45 28 56 18" stroke="#0d2240" strokeWidth="4" strokeLinecap="round" fill="none" opacity="0.5"/>
-        <path d="M4 26 Q15 16 30 26 Q45 36 56 26" stroke="#0d2240" strokeWidth="4" strokeLinecap="round" fill="none"/>
+        <path d="M4 18 Q15 8 30 18 Q45 28 56 18" stroke="var(--brand)" strokeWidth="4" strokeLinecap="round" fill="none" opacity="0.5"/>
+        <path d="M4 26 Q15 16 30 26 Q45 36 56 26" stroke="var(--brand)" strokeWidth="4" strokeLinecap="round" fill="none"/>
       </svg>
-      <span className="font-bold text-[#0d2240] dark:text-blue-200 text-base">Twin Harbors Medical Supply</span>
+      <span className="font-bold text-[var(--brand)] dark:text-blue-200 text-base">Twin Harbors Medical Supply</span>
     </div>
   )
 }
