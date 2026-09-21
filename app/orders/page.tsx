@@ -4,6 +4,8 @@ import { redirect } from 'next/navigation'
 import Header from '@/components/Header'
 import Link from 'next/link'
 import PrintReceiptButton from '@/components/PrintReceiptButton'
+import NoAccess from '@/components/NoAccess'
+import { getPortalAccount, getSite } from '@/lib/portal'
 
 function money(n: number) {
   return '$' + Number(n).toFixed(2)
@@ -34,7 +36,7 @@ function StatusBadge({ status }: { status: string }) {
       cls: 'bg-amber-100 dark:bg-amber-950/50 text-amber-800 dark:text-amber-400 border-amber-200 dark:border-amber-800',
     },
     pending: {
-      label: 'Pending',
+      label: 'Received',
       cls: 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-600',
     },
     confirmed: {
@@ -68,51 +70,49 @@ export default async function OrdersPage() {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')
 
+  const [site, account] = await Promise.all([getSite(), getPortalAccount()])
+  if (!account) return <NoAccess email={user.email ?? ''} brandName={site.brand_name} supportEmail={site.support_email} />
   const admin = createAdminClient()
-  const emailLower = (user.email ?? '').toLowerCase()
-  const { data: customer } = await admin
-    .from('customers')
-    .select('id')
-    .or(`customer_email.ilike.${emailLower},portal_email.ilike.${emailLower}`)
-    .maybeSingle()
 
   type OrderItem = {
     id: string; item_name: string; sku: string
-    sell_mode: string; qty: number; unit_price: number; line_total: number
+    sell_mode: string; uom: string | null; qty: number; unit_price: number; line_total: number
   }
   type Order = {
     id: string; order_number: string; status: string
     subtotal: number; notes: string | null; placed_at: string
     paid_at: string | null; carrier: string | null; tracking_number: string | null
+    po_number: string | null; placed_by_email: string | null
     portal_order_items: OrderItem[]
   }
 
-  let orders: Order[] = []
-  if (customer?.id) {
-    const { data } = await admin
-      .from('portal_orders')
-      .select(`
-        id, order_number, status, subtotal, notes, placed_at,
-        paid_at, carrier, tracking_number,
-        portal_order_items(id, item_name, sku, sell_mode, qty, unit_price, line_total)
-      `)
-      .eq('customer_id', customer.id)
-      .neq('status', 'pending_payment') // hide unpaid abandoned sessions
-      .order('placed_at', { ascending: false })
-    orders = (data as Order[]) ?? []
-  }
+  // Every order on the customer's account, not just this buyer's — colleagues see each other's orders.
+  const { data } = await admin
+    .from('portal_orders')
+    .select(`
+      id, order_number, status, subtotal, notes, placed_at,
+      paid_at, carrier, tracking_number, po_number, placed_by_email,
+      portal_order_items(id, item_name, sku, sell_mode, uom, qty, unit_price, line_total)
+    `)
+    .eq('company_id', account.companyId)
+    .eq('customer_id', account.customerId)
+    .not('status', 'in', '(pending_payment,submitting)') // unpaid card sessions / half-written orders
+    .order('placed_at', { ascending: false })
+    .limit(200)
+  const orders = (data as Order[]) ?? []
+  const isTerms = site.payment_mode === 'terms'
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-900 flex flex-col">
       <Header email={user.email ?? ''} />
 
       <div className="max-w-4xl mx-auto w-full px-4 sm:px-6 py-6 sm:py-8 flex-1">
-        <h2 className="text-xl sm:text-2xl font-bold text-[#0d2240] dark:text-blue-200 mb-6">My Orders</h2>
+        <h2 className="text-xl sm:text-2xl font-bold text-[var(--brand)] dark:text-blue-200 mb-6">My Orders</h2>
 
         {orders.length === 0 ? (
           <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm p-12 sm:p-16 text-center text-slate-400 dark:text-slate-500">
             <p className="mb-4">No orders placed yet.</p>
-            <Link href="/catalog" className="text-sm text-[#0d2240] dark:text-blue-400 font-semibold hover:underline">
+            <Link href="/catalog" className="text-sm text-[var(--brand)] dark:text-blue-400 font-semibold hover:underline">
               Browse the catalog →
             </Link>
           </div>
@@ -124,19 +124,23 @@ export default async function OrdersPage() {
                 <div className="px-4 sm:px-6 py-4 border-b border-slate-100 dark:border-slate-700 flex flex-wrap items-start justify-between gap-3">
                   <div className="flex flex-col gap-1.5">
                     <div className="flex items-center gap-3 flex-wrap">
-                      <span className="text-base sm:text-lg font-bold text-[#0d2240] dark:text-blue-200">{order.order_number}</span>
+                      <span className="text-base sm:text-lg font-bold text-[var(--brand)] dark:text-blue-200">{order.order_number}</span>
                       <StatusBadge status={order.status} />
                     </div>
-                    <span className="text-xs text-slate-400 dark:text-slate-500">{formatDate(order.placed_at)}</span>
+                    <span className="text-xs text-slate-400 dark:text-slate-500">
+                      {formatDate(order.placed_at)}
+                      {order.po_number && <> &middot; PO {order.po_number}</>}
+                      {order.placed_by_email && order.placed_by_email !== account.email && <> &middot; by {order.placed_by_email}</>}
+                    </span>
                   </div>
                   <div className="text-right flex flex-col items-end gap-1.5">
-                    <div className="font-bold text-[#0d2240] dark:text-blue-200 text-base">{money(order.subtotal)}</div>
+                    <div className="font-bold text-[var(--brand)] dark:text-blue-200 text-base">{money(order.subtotal)}</div>
                     {order.paid_at && (
                       <div className="text-xs text-emerald-600 dark:text-emerald-400">
                         Paid {formatDate(order.paid_at)}
                       </div>
                     )}
-                    {PAID_STATUSES.has(order.status) && (
+                    {(isTerms || PAID_STATUSES.has(order.status)) && (
                       <PrintReceiptButton order={order} customerEmail={user.email ?? ''} />
                     )}
                   </div>
@@ -182,7 +186,7 @@ export default async function OrdersPage() {
                           <p className="font-medium text-slate-800 dark:text-slate-200 text-sm leading-snug">{li.item_name}</p>
                           <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">{li.sku}</p>
                           <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 capitalize">
-                            {li.sell_mode} · {li.qty} × {money(li.unit_price)}
+                            {li.uom || li.sell_mode} · {li.qty} × {money(li.unit_price)}
                           </p>
                         </div>
                         <p className="font-semibold text-slate-800 dark:text-slate-200 text-sm whitespace-nowrap pt-0.5">{money(li.line_total)}</p>
@@ -199,7 +203,7 @@ export default async function OrdersPage() {
                             <p className="text-xs text-slate-400 dark:text-slate-500">{li.sku}</p>
                           </td>
                           <td className="py-2.5 px-3 text-center">
-                            <span className="text-xs bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400 px-2 py-0.5 rounded-full capitalize">{li.sell_mode}</span>
+                            <span className="text-xs bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400 px-2 py-0.5 rounded-full capitalize">{li.uom || li.sell_mode}</span>
                           </td>
                           <td className="py-2.5 px-3 text-center text-slate-600 dark:text-slate-400">×{li.qty}</td>
                           <td className="py-2.5 px-3 text-right text-slate-500 dark:text-slate-400">{money(li.unit_price)}</td>

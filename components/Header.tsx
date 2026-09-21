@@ -4,6 +4,7 @@ import { useRouter, usePathname } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { ShoppingCartIcon, ClipboardDocumentListIcon } from '@heroicons/react/24/outline'
 import ThemeToggle from './ThemeToggle'
+import { BrandMark, useBrand } from './BrandProvider'
 
 interface HeaderProps {
   email?: string
@@ -14,6 +15,7 @@ interface HeaderProps {
 export default function Header({ email, cartCount = 0, onCartClick }: HeaderProps) {
   const router = useRouter()
   const pathname = usePathname()
+  const brand = useBrand()
 
   async function handleSignOut() {
     const supabase = createClient()
@@ -30,7 +32,7 @@ export default function Header({ email, cartCount = 0, onCartClick }: HeaderProp
         className={`flex items-center gap-1.5 text-sm px-3 py-2 rounded-lg transition-colors ${
           active
             ? 'bg-white/20 text-white font-semibold'
-            : 'text-blue-200 hover:text-white hover:bg-white/10'
+            : 'text-white/70 hover:text-white hover:bg-white/10'
         }`}
       >
         {icon}
@@ -40,20 +42,19 @@ export default function Header({ email, cartCount = 0, onCartClick }: HeaderProp
   }
 
   return (
-    <header className="bg-[#0d2240] text-white sticky top-0 z-50 shadow-lg">
+    <header className="bg-[var(--brand)] text-white sticky top-0 z-50 shadow-lg">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-14 sm:h-16">
           {/* Logo */}
           <div className="flex items-center gap-3 min-w-0">
-            <svg width="28" height="18" viewBox="0 0 60 36" fill="none" className="flex-shrink-0">
-              <path d="M4 18 Q15 8 30 18 Q45 28 56 18" stroke="white" strokeWidth="4" strokeLinecap="round" fill="none" opacity="0.5"/>
-              <path d="M4 26 Q15 16 30 26 Q45 36 56 26" stroke="white" strokeWidth="4" strokeLinecap="round" fill="none"/>
-            </svg>
+            <BrandMark size={28} />
             <div className="min-w-0">
-              <span className="font-bold text-base sm:text-lg tracking-tight">HarborDirect</span>
-              <span className="hidden sm:block text-blue-300 text-xs tracking-widest uppercase -mt-0.5">
-                Twin Harbors Medical Supply
-              </span>
+              <span className="font-bold text-base sm:text-lg tracking-tight">{brand.brand_name}</span>
+              {brand.tagline && (
+                <span className="hidden sm:block text-white/60 text-xs tracking-widest uppercase -mt-0.5">
+                  {brand.tagline}
+                </span>
+              )}
             </div>
           </div>
 
@@ -72,7 +73,7 @@ export default function Header({ email, cartCount = 0, onCartClick }: HeaderProp
           {/* Right side actions */}
           <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
             {email && (
-              <span className="hidden lg:block text-blue-200 text-sm truncate max-w-[180px]">
+              <span className="hidden lg:block text-white/70 text-sm truncate max-w-[180px]">
                 {email}
               </span>
             )}
@@ -97,7 +98,7 @@ export default function Header({ email, cartCount = 0, onCartClick }: HeaderProp
 
             <button
               onClick={handleSignOut}
-              className="text-xs sm:text-sm text-blue-200 hover:text-white transition-colors px-2 sm:px-3 py-2 rounded-lg hover:bg-white/10 whitespace-nowrap"
+              className="text-xs sm:text-sm text-white/70 hover:text-white transition-colors px-2 sm:px-3 py-2 rounded-lg hover:bg-white/10 whitespace-nowrap"
             >
               Sign out
             </button>

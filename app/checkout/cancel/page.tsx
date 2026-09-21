@@ -27,7 +27,7 @@ function CancelContent() {
           </svg>
         </div>
 
-        <h1 className="text-2xl font-bold text-[#0d2240] dark:text-blue-200 mb-2">Payment Cancelled</h1>
+        <h1 className="text-2xl font-bold text-[var(--brand)] dark:text-blue-200 mb-2">Payment Cancelled</h1>
         <p className="text-sm text-slate-500 dark:text-slate-400 mb-8 leading-relaxed">
           Your payment was not completed. Your cart items are still saved — you can go back and try again.
         </p>
@@ -35,7 +35,7 @@ function CancelContent() {
         <div className="flex flex-col gap-3">
           <button
             onClick={handleRetry}
-            className="w-full py-3 bg-[#0d2240] text-white font-semibold rounded-lg hover:bg-[#1a3a6a] transition-colors text-sm"
+            className="w-full py-3 bg-[var(--brand)] text-white font-semibold rounded-lg hover:bg-[var(--brand-hover)] transition-colors text-sm"
           >
             Return to Checkout
           </button>
